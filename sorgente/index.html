@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Parry Brawl Survivor</title>
+  <meta name="description" content="A survivor brawler built around the parry: hold off the horde on the beat, in your browser or on your whole Android phone.">
+  <meta name="theme-color" content="#141220">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icone/favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="icone/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Parry Brawl">
+  <meta property="og:title" content="Parry Brawl Survivor">
+  <meta property="og:description" content="Parry on time. On the beat.">
+  <meta property="og:image" content="icone/icona-512.png">
+  <link rel="stylesheet" href="font.css">
+  <link rel="stylesheet" href="sito.css">
+</head>
+<body>
+  <header class="testa">
+    <a class="marchio" href="./"><img src="icone/icona-192.png" alt="" width="34" height="34"><span>Parry Brawl Survivor</span></a>
+    <a class="piccolo" href="#installa" data-t="installa">Install</a>
+  </header>
+
+  <main>
+    <section class="eroe">
+      <div class="anello" aria-hidden="true"><i></i><i></i><i></i></div>
+      <h1><em>Parry</em> Brawl<br>Survivor</h1>
+      <p class="sotto" data-t="sotto">The horde attacks on the beat. Parry on time, chain them, survive.</p>
+      <a class="grande" href="gioca.html" data-gioca data-t="gioca">Play now</a>
+      <p class="nota" data-t="nota">Free. No account. Works offline once opened.</p>
+    </section>
+
+    <section class="tre">
+      <article><h2 data-t="t1">Parry is the game</h2><p data-t="p1">A ring closes around the shield button and touches its edge at the instant of the hit. Gold means now.</p></article>
+      <article><h2 data-t="t2">On the beat</h2><p data-t="p2">The music drives the horde: attacks land on the beat and a "tick" warns you one beat earlier. Play with sound.</p></article>
+      <article><h2 data-t="t3">Survivor run</h2><p data-t="p3">Endless waves, weapons that level up, bosses every few minutes and a global leaderboard.</p></article>
+    </section>
+
+    <section class="installa" id="installa">
+      <h2 data-t="installaTitolo">Put it on your phone</h2>
+
+      <div class="piattaforma" data-per="ios">
+        <h3 data-t="iosTitolo">iPhone and iPad</h3>
+        <p data-t="iosTesto">Install it as an app from Safari: full screen, its own icon, works offline.</p>
+        <ol class="passi">
+          <li><span class="num">1</span><span data-t="ios1">Open this page in <b>Safari</b>.</span></li>
+          <li><span class="num">2</span><span><span data-t="ios2">Tap</span> <svg class="ios-cond" viewBox="0 0 24 24" aria-label="Share"><path d="M12 3l4 4h-3v8h-2V7H8zM5 11h3v2H7v6h10v-6h-1v-2h3v10H5z"/></svg> <b data-t="condividi">Share</b>.</span></li>
+          <li><span class="num">3</span><span data-t="ios3">Choose <b>Add to Home Screen</b>, then <b>Add</b>.</span></li>
+        </ol>
+        <p class="avviso" data-t="iosNota">iOS does not let any app draw over the home screen or other apps, so on iPhone the game runs full screen.</p>
+      </div>
+
+      <div class="piattaforma" data-per="android">
+        <h3 data-t="androidTitolo">Android: your whole phone is the ring</h3>
+        <p data-t="androidTesto">The app turns your real screens into the arena: the home screen, the lock screen, any app or web page. Fighters stand on icons and buttons while the phone stays usable.</p>
+        <a class="grande scarica" href="#" data-apk><span data-t="scarica">Download the APK</span> <small data-apk-info></small></a>
+        <ol class="passi">
+          <li><span class="num">1</span><span data-t="and1">Open the downloaded file. Chrome may warn that the file could be harmful: it is the standard warning for apps from outside the Play Store. Tap <b>Download anyway</b>.</span></li>
+          <li><span class="num">2</span><span data-t="and2">Allow <b>Install unknown apps</b> for Chrome when Android asks, then <b>Install</b>.</span></li>
+          <li><span class="num">3</span><span data-t="and3">Android 13 or later: if the accessibility switch is grey, open <b>App info → ⋮ → Allow restricted settings</b>. The app reads only where elements are on screen, never their text.</span></li>
+        </ol>
+        <p class="avviso"><span data-t="androidPwa">Prefer not to install an APK? In Chrome use</span> <b>⋮ → <span data-t="aggiungi">Add to Home screen</span></b> <span data-t="androidPwa2">for the full-screen game.</span></p>
+      </div>
+
+      <div class="piattaforma" data-per="desktop">
+        <h3 data-t="pcTitolo">On a computer</h3>
+        <p data-t="pcTesto">Play here with the keyboard (S to parry, arrows to move), or put the fighters on every web page with the Chrome extension.</p>
+        <a class="grande secondo" href="https://chromewebstore.google.com/detail/page-brawl/fhpgfhllcdfbhalcmfbdlolpgbgpnloi" rel="noopener" data-t="estensione">Chrome extension</a>
+      </div>
+      <button type="button" class="altre" data-altre data-t="altre">Show all platforms</button>
+    </section>
+  </main>
+
+  <footer class="piede">
+    <p data-t="privacy">No ads, no tracking. Settings stay on your device. Only the name you choose for the leaderboard and your score are sent, when you send them.</p>
+    <p><a href="https://github.com/rikyroky91-commits/parry-brawl-survivor" rel="noopener">GitHub</a></p>
+  </footer>
+  <script src="sito.js"></script>
+</body>
+</html>

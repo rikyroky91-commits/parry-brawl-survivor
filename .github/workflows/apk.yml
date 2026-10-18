@@ -1,0 +1,81 @@
+# L'APK da scaricare dal sito: si costruisce dal motore di motore.json (android/costruisci.py di android-updater,
+# senza Gradle e senza Google Play Billing: tutto aperto) e si firma con la chiave DEL SITO, che sta nei segreti
+# del repo (FIRMA_KEYSTORE in base64 e FIRMA_PASSWORD). La chiave di prova di android-updater ha la password
+# scritta nel repo pubblico: con quella chiunque potrebbe firmare un «aggiornamento», quindi qui non si usa.
+# Esce una release «apk-<commit>» marcata come ultima, col file ParryBrawlSurvivor.apk: il sito la trova da sé.
+name: apk
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "motore.json"
+      - ".github/workflows/apk.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FIRMA_KEYSTORE: ${{ secrets.FIRMA_KEYSTORE }}
+      FIRMA_PASSWORD: ${{ secrets.FIRMA_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Chiave del sito presente?
+        id: chiave
+        run: |
+          if [ -z "$FIRMA_KEYSTORE" ] || [ -z "$FIRMA_PASSWORD" ]; then
+            echo "::warning title=APK non pubblicato::mancano i segreti FIRMA_KEYSTORE e FIRMA_PASSWORD (vedi README)"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-java@v4
+        if: steps.chiave.outputs.ok == 'true'
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Motore al commit fissato
+        if: steps.chiave.outputs.ok == 'true'
+        run: |
+          commit=$(python3 -c "import json;print(json.load(open('motore.json'))['commit'])")
+          repo=$(python3 -c "import json;print(json.load(open('motore.json'))['repo'])")
+          git init -q motore && cd motore
+          git remote add origin "$repo" && git fetch -q --depth 1 origin "$commit" && git checkout -q FETCH_HEAD
+          echo "COMMIT=$commit" >> "$GITHUB_ENV"
+
+      - name: APK
+        if: steps.chiave.outputs.ok == 'true'
+        working-directory: motore
+        run: |
+          set -o pipefail
+          mkdir -p "$HOME/tools"
+          if [ ! -f "$ANDROID_HOME/platforms/android-36/android.jar" ]; then
+            curl -sSL -o "$HOME/tools/android-36.jar" https://raw.githubusercontent.com/Sable/android-platforms/master/android-36/android.jar
+          fi
+          python3 estensione/costruisci.py
+          python3 android/costruisci.py
+          echo "$FIRMA_KEYSTORE" | base64 -d > "$RUNNER_TEMP/sito.jks"
+          firma=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$firma" sign --ks "$RUNNER_TEMP/sito.jks" --ks-pass env:FIRMA_PASSWORD --out ../ParryBrawlSurvivor.apk android/build/PageBrawl.apk
+          "$firma" verify --print-certs ../ParryBrawlSurvivor.apk | head -3
+          rm -f "$RUNNER_TEMP/sito.jks"
+
+      - name: Release
+        if: steps.chiave.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="apk-${COMMIT::7}"
+          sha256sum ParryBrawlSurvivor.apk | tee SHA256SUMS
+          gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$tag" ParryBrawlSurvivor.apk SHA256SUMS --latest \
+            --title "Parry Brawl Survivor per Android (motore ${COMMIT::7})" \
+            --notes "APK firmato con la chiave del sito. Si installa da file: vedi la pagina del gioco."
