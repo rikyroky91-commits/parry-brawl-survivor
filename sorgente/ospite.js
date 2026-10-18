@@ -133,12 +133,23 @@
     ev.preventDefault(); ev.stopImmediatePropagation();
     if (!window.__pbsFrecce) return;
     try {
-      if (id === "sinistra" || id === "destra") { r.premi(id); return; }
+      if (id === "sinistra" || id === "destra") {
+        // Tenuta premuta: un passo subito e poi uno ogni 150 ms finché si lascia, senza aspettare la ripetizione del
+        // sistema (che parte dopo mezzo secondo e cambia da un PC all'altro).
+        if (ev.repeat || tenuta[id]) return;
+        r.premi(id);
+        tenuta[id] = setInterval(function () { try { if (inLotta(r) && window.__pbsFrecce) r.premi(id); } catch (e) { /* niente */ } }, 150);
+        return;
+      }
       if (ev.repeat) return;
       var chi = m.corsaHud ? m.corsaHud.chi : m.chi, io = (m.lottatori || []).filter(function (l) { return l.tipo === chi; })[0];
       if ((id === "su") !== !!(io && io.vola)) r.premi("vola");
     } catch (e) { /* niente */ }
   }, true);
+  var tenuta = {};
+  function lascia(id) { if (tenuta[id]) { clearInterval(tenuta[id]); tenuta[id] = 0; } }
+  window.addEventListener("keyup", function (ev) { var id = FRECCE[ev.code]; if (id) lascia(id); }, true);
+  window.addEventListener("blur", function () { lascia("sinistra"); lascia("destra"); });
 
   // iPhone: con l'interruttore silenzioso Safari zittisce l'audio delle pagine. Dichiarato come
   // «riproduzione», suona come un'app di musica (Safari 17 e successivi; gli altri lo ignorano).

@@ -110,6 +110,8 @@
   var hud = el("div", "");
   hud.id = "pbs-hud";
   hud.className = "pbs-nascosti";
+  // (anche qui, non solo su <html>: le arene riscrivono la classe di <html> quando cambiano, vedi __pbArena)
+  if (PC) hud.classList.add("pbs-pc");
   var capsula = el("div", "pbs-capsula tocca");
   var bPausa = el("button", "pbs-icona", ICONE.pausa); bPausa.setAttribute("aria-label", t.pausa);
   var avatar = [mkAvatar(), mkAvatar()];
