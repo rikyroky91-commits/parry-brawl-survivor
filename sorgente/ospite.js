@@ -65,6 +65,12 @@
 
   // Telefono: vita, punteggio, abilità, parata li disegna il sito (hud.js), non il canvas. PC: li disegna il motore.
   window.__ringHudEsterno = !window.__pbsPc;
+  // Niente suggerimenti dei tasti disegnati sul canvas (finivano sopra le voci del menu) e il controller radiale
+  // nell'angolo in basso dello schermo, non sul pavimento dell'arena (18/10/2026, Riccardo).
+  window.__ringSuggerimenti = false;
+  window.__ringRadialeInBasso = true;
+  // Il suolo dell'arena protagonista: zombie, gemme e forzieri escono dal terreno, che tiene i segni (vedi arena.html).
+  window.__ringSuolo = true;
   window.__ringBordoOggetti = 0.1;
   window.__pbModo = "arena";
   window.__pbSalva = salva;
@@ -106,6 +112,7 @@
   // I tocchi passano prima dal sito, poi dal motore: il motore ascolta `pointerdown` sulla finestra in fase di cattura,
   // e chi si registra prima viene servito prima. Qui (caricato prima di ring.js) si mette il gancio; la croce
   // invisibile di hud.js (`window.__pbsTocco`) decide se il tocco è suo e allora lo ferma.
+  // (I pannelli del sito stanno in `#pbs-hud`, che porta `data-ring-fuori`: il motore non ci prende i tocchi.)
   if (!window.__pbsPc) ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(function (tipo) {
     window.addEventListener(tipo, function (ev) { if (typeof window.__pbsTocco === "function") window.__pbsTocco(ev); }, { capture: true, passive: false });
   });
@@ -124,6 +131,8 @@
     return m;
   }
   window.addEventListener("keydown", function (ev) {
+    // Col menu del sito aperto la tastiera è sua (Esc o M lo chiudono): sotto, il motore non deve muovere i suoi menu.
+    if (typeof window.__pbsFoglioTasto === "function" && window.__pbsFoglioTasto(ev)) { ev.stopImmediatePropagation(); return; }
     var id = FRECCE[ev.code];
     if (!id || ev.ctrlKey || ev.metaKey || ev.altKey) return;
     var dove = ev.composedPath ? ev.composedPath()[0] : ev.target;

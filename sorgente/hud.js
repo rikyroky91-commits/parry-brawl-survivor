@@ -35,6 +35,7 @@
           frecce: "Frecce per guidare", frecceSotto: "← → cammina, ↑ vola, ↓ atterra. Spente, il lottatore va da solo", accese: "Accese", spente: "Spente",
           comandi: "Comandi", comandiSotto: "PC: controller radiale e tastiera · Touch: tasti sullo schermo", auto: "Automatici", pc: "PC", touch: "Touch",
           menuPc: "Menu (M)", sito: "Menu del sito: musica, frecce, comandi",
+          radiale: "Controller radiale", radialeSotto: "Le mosse in un ventaglio nell'angolo in basso a destra",
           instTitolo: "Installa Parry Brawl Survivor", instPc: "Sul telefono apri questo indirizzo, poi segui i passi qui sotto:", copia: "Copia", copiato: "Copiato",
           andTitolo: "Android: tutto il telefono è il ring", andTesto: "L'app usa le tue schermate vere come arena: Home, blocco schermo, qualsiasi app.",
           apk: "Scarica l'APK", apkArrivo: "APK in arrivo", apkInfo: "ultima versione",
@@ -57,6 +58,7 @@
           frecce: "Arrow keys steer", frecceSotto: "← → walk, ↑ fly, ↓ land. Off: the fighter moves on its own", accese: "On", spente: "Off",
           comandi: "Controls", comandiSotto: "PC: radial controller and keyboard · Touch: on-screen buttons", auto: "Automatic", pc: "PC", touch: "Touch",
           menuPc: "Menu (M)", sito: "Site menu: music, arrow keys, controls",
+          radiale: "Radial controller", radialeSotto: "Your moves in a fan in the bottom-right corner",
           instTitolo: "Install Parry Brawl Survivor", instPc: "On your phone open this address, then follow the steps below:", copia: "Copy", copiato: "Copied",
           andTitolo: "Android: your whole phone is the ring", andTesto: "The app uses your real screens as the arena: home screen, lock screen, any app.",
           apk: "Download the APK", apkArrivo: "APK coming soon", apkInfo: "latest version",
@@ -103,6 +105,7 @@
     pausa: '<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg>',
     gioca: '<svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
     menu: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>',
+    righe: '<svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="2.4" rx="1.2"/><rect x="4" y="10.8" width="16" height="2.4" rx="1.2"/><rect x="4" y="15.6" width="16" height="2.4" rx="1.2"/></svg>',
     vola: '<svg viewBox="0 0 24 24"><path d="M12 3l7 8h-4.5v5h-5v-5H5zM8 18h8v2.5H8z"/></svg>',
   };
 
@@ -110,6 +113,9 @@
   var hud = el("div", "");
   hud.id = "pbs-hud";
   hud.className = "pbs-nascosti";
+  // Il motore non prende i tocchi che cadono qui: nei suoi menu si prendeva ogni tocco e il clic sul menu del sito non
+  // arrivava, così il menu restava aperto e il gioco in pausa (Riccardo, 18/10: «quando si preme opzioni si blocca tutto»).
+  hud.setAttribute("data-ring-fuori", "");
   // (anche qui, non solo su <html>: le arene riscrivono la classe di <html> quando cambiano, vedi __pbArena)
   if (PC) hud.classList.add("pbs-pc");
   var capsula = el("div", "pbs-capsula tocca");
@@ -476,6 +482,10 @@
       }],
       ["🚪", t.home, "", "", function () { location.href = "./"; }],
     ];
+    if (PC) righe.splice(3, 0, ["🎮", t.radiale, t.radialeSotto, radialeAperto() ? t.accese : t.spente, function () {
+      var b = tastoRadiale(); if (b) b.click();
+      this.querySelector(".val").textContent = radialeAperto() ? t.accese : t.spente;
+    }]);
     if (PC) righe.splice(3, 0, ["⌨️", t.frecce, t.frecceSotto, window.__pbsFrecce ? t.accese : t.spente, function () {
       window.__pbsFrecce = !window.__pbsFrecce;
       if (window.__pbSalva) window.__pbSalva({ "pbs-frecce": window.__pbsFrecce ? "on" : "off" });
@@ -490,6 +500,13 @@
     hud.appendChild(foglio);
     hud.classList.add("pbs-nascosti");
   }
+  window.__pbsFoglioTasto = function (ev) {
+    if (!foglio) return false;
+    if (ev.code === "Escape" || (ev.code === "KeyM" && !ev.repeat)) { ev.preventDefault(); chiudiMenu(); }
+    return true;
+  };
+  function tastoRadiale() { var rd = window.__ringRadice; return rd && rd.querySelector ? rd.querySelector(".tasto[data-radiale]") : null; }
+  function radialeAperto() { var b = tastoRadiale(); return !!(b && b.getAttribute("aria-pressed") === "true"); }
   function nomeComandi() {
     var c = (window.__ringDati || {})["pbs-comandi"];
     return c === "pc" ? t.pc : c === "touch" ? t.touch : t.auto + " · " + (PC ? t.pc : t.touch);
@@ -578,7 +595,16 @@
     if (radice && radice.querySelector) {
       try {
         var st = document.createElement("style");
-        st.textContent = ".tasto[data-gioca] { display: none !important; } .tasto[data-sito] svg { width: 18px; height: 18px; fill: currentColor; }";
+        // Un tasto solo (18/10/2026, Riccardo: «i tre tasti del vecchio ui… ripensa e ripulisci»): il menu del sito.
+        // Controller radiale e opzioni del ring sono due righe di quel menu; la barretta resta per farsi da parte
+        // quando il controller è aperto (il motore le scrive quanto è largo).
+        st.textContent = ".tasto[data-gioca], .tasto[data-radiale], .tasto[data-opzioni] { display: none !important; }" +
+          ".barretta { background: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; right: 14px; bottom: 14px; }" +
+          ".barretta.con-controller { right: calc(var(--controller, 0px) + 6px) !important; }" +
+          ".tasto[data-sito] { width: 44px; height: 44px; border: 1px solid rgba(255,216,74,.35) !important; background: rgba(14,12,24,.72) !important;" +
+          " color: #fff !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 4px 14px rgba(0,0,0,.35); transition: transform .12s ease, border-color .12s ease; }" +
+          ".tasto[data-sito]:hover { border-color: #ffd84a !important; transform: scale(1.06); }" +
+          ".tasto[data-sito] svg { width: 20px; height: 20px; fill: currentColor; }";
         radice.appendChild(st);
       } catch (e) { /* niente */ }
       var barretta = radice.querySelector(".barretta");
@@ -586,7 +612,7 @@
         var bSito = document.createElement("button");
         bSito.type = "button"; bSito.className = "tasto"; bSito.setAttribute("data-sito", "");
         bSito.setAttribute("aria-label", t.menuPc); bSito.title = t.menuPc + " · " + t.sito;
-        bSito.innerHTML = ICONE.menu;
+        bSito.innerHTML = ICONE.righe;
         bSito.addEventListener("click", function () { var r = R(); try { if (r && r.pannello()) r.pannello(false); } catch (e) { /* niente */ } apriMenu(); });
         barretta.appendChild(bSito);
       }
