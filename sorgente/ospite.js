@@ -19,8 +19,10 @@
   if (!dati["mut-ring-audio"]) dati["mut-ring-audio"] = "on";
 
   function salva(oggetto) {
-    for (var k in oggetto) if (Object.prototype.hasOwnProperty.call(oggetto, k)) dati[k] = String(oggetto[k]);
+    var cambiato = false;
+    for (var k in oggetto) if (Object.prototype.hasOwnProperty.call(oggetto, k)) { if (dati[k] !== String(oggetto[k])) cambiato = true; dati[k] = String(oggetto[k]); }
     try { window.localStorage.setItem(CHIAVE, JSON.stringify(dati)); } catch (e) { /* memoria piena o privata: resta per questa volta */ }
+    if (cambiato && typeof spedisciPiuTardi === "function") spedisciPiuTardi();
   }
   salva({});
 
@@ -71,6 +73,8 @@
   window.__ringRadialeInBasso = true;
   // Il suolo dell'arena protagonista: zombie, gemme e forzieri escono dal terreno, che tiene i segni (vedi arena.html).
   window.__ringSuolo = true;
+  // Accanto al menu iniziale, i personaggi con le loro doti da alzare coi crediti (il roster del motore).
+  window.__ringRoster = true;
   window.__ringBordoOggetti = 0.1;
   window.__pbModo = "arena";
   window.__pbSalva = salva;
@@ -159,6 +163,87 @@
   function lascia(id) { if (tenuta[id]) { clearInterval(tenuta[id]); tenuta[id] = 0; } }
   window.addEventListener("keyup", function (ev) { var id = FRECCE[ev.code]; if (id) lascia(id); }, true);
   window.addEventListener("blur", function () { lascia("sinistra"); lascia("destra"); });
+
+  // ·· L'account (18/10/2026, Riccardo: «una pagina di log semplice, nick, mail e password, così da poter conservare il
+  // proprio personaggio nel proprio account») ··
+  // Sul server del tracker (`/api/giocatore`, nel repo android-updater), lo stesso della classifica. Il salvataggio è la
+  // memoria del gioco (crediti, bottega, allenamento dei personaggi, missioni, record, impostazioni): a ogni cambio si
+  // spedisce dopo qualche secondo; all'apertura, se sul server ce n'è uno più nuovo, si prende quello e si riparte.
+  // Il token sta in `pbs-account` (fuori dalla memoria del gioco, che finisce sul server).
+  var API = "https://mobileupdatetracker.duckdns.org/api/giocatore";
+  var CHIAVE_ACCOUNT = "pbs-account";
+  var conto = null;
+  try { conto = JSON.parse(window.localStorage.getItem(CHIAVE_ACCOUNT) || "null"); } catch (e) { conto = null; }
+  function salvaConto() { try { if (conto) window.localStorage.setItem(CHIAVE_ACCOUNT, JSON.stringify(conto)); else window.localStorage.removeItem(CHIAVE_ACCOUNT); } catch (e) { /* niente */ } }
+  // Cosa va nel salvataggio: tutto quello del gioco tranne cose del solo dispositivo.
+  var SOLO_QUI = { "pbs-comandi": 1, "pb-fps": 1, "pb-risoluzione": 1, "pb-dettaglio": 1 };
+  function salvataggio() { var o = {}; for (var k in dati) if (!SOLO_QUI[k]) o[k] = dati[k]; return o; }
+  function chiama(metodo, via, corpo) {
+    var h = { "Content-Type": "application/json" };
+    if (conto && conto.token) h.Authorization = "Bearer " + conto.token;
+    return fetch(API + via, { method: metodo, headers: h, credentials: "omit", cache: "no-store", body: corpo ? JSON.stringify(corpo) : undefined })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (r.status === 401 && conto && via !== "/accedi") { conto = null; salvaConto(); avvisa(); }
+          if (!r.ok) throw new Error((j && j.errore) || (r.status === 0 ? "Server non raggiungibile" : "Errore " + r.status));
+          return j;
+        });
+      }, function () { throw new Error("Server non raggiungibile: riprova fra poco"); });
+  }
+  var ascolta = [];
+  function avvisa() { ascolta.forEach(function (f) { try { f(statoConto()); } catch (e) { /* niente */ } }); }
+  function statoConto() { return conto ? { nick: conto.nick, salvato: conto.salvato || 0, errore: conto.errore || "" } : null; }
+  var attesaInvio = 0;
+  function spedisciPiuTardi() { if (!conto) return; clearTimeout(attesaInvio); attesaInvio = setTimeout(spedisci, 4000); }
+  function spedisci() {
+    if (!conto) return Promise.resolve();
+    return chiama("PUT", "/salvataggio", { salvataggio: salvataggio() })
+      .then(function (j) { if (conto) { conto.salvato = Date.now(); conto.aggiornato = j.aggiornato || conto.aggiornato; conto.errore = ""; salvaConto(); avvisa(); } })
+      .catch(function (e) { if (conto) { conto.errore = e.message; avvisa(); } });
+  }
+  // Dal server alla memoria del gioco, poi si riparte (il motore legge la memoria solo all'avvio).
+  function applica(s) {
+    if (!s || typeof s !== "object") return false;
+    var tieni = {}; for (var k in SOLO_QUI) if (dati[k] !== undefined) tieni[k] = dati[k];
+    dati = {}; for (var c in s) if (Object.prototype.hasOwnProperty.call(s, c)) dati[c] = String(s[c]);
+    for (var t in tieni) dati[t] = tieni[t];
+    try { window.localStorage.setItem(CHIAVE, JSON.stringify(dati)); } catch (e) { /* niente */ }
+    return true;
+  }
+  function dentro(j) {
+    conto = { token: j.token, nick: j.nick, salvato: 0, aggiornato: j.aggiornato || null };
+    salvaConto();
+    // Account con un salvataggio: si gioca da lì. Account nuovo (o vuoto): ci va quello di questo dispositivo.
+    if (j.salvataggio && Object.keys(j.salvataggio).length) { applica(j.salvataggio); conto.salvato = Date.now(); salvaConto(); setTimeout(function () { location.reload(); }, 300); return { ricarica: true }; }
+    return spedisci().then(function () { avvisa(); return { ricarica: false }; });
+  }
+  window.__pbsAccount = {
+    stato: statoConto,
+    ascolta: function (f) { ascolta.push(f); },
+    registra: function (nick, email, password) { return chiama("POST", "/registra", { nick: nick, email: email, password: password }).then(dentro); },
+    accedi: function (login, password) { return chiama("POST", "/accedi", { login: login, password: password }).then(dentro); },
+    esci: function () {
+      var c = conto;
+      return (c ? spedisci().then(function () { return chiama("POST", "/esci"); }) : Promise.resolve()).catch(function () { /* esce lo stesso */ })
+        .then(function () { conto = null; salvaConto(); avvisa(); });
+    },
+    salvaOra: spedisci,
+  };
+  // All'apertura, con un account: il salvataggio del server, se è più nuovo di quello spedito da qui.
+  if (conto) {
+    chiama("GET", "/salvataggio").then(function (j) {
+      if (!conto) return;
+      var suServer = j.aggiornato ? Date.parse(j.aggiornato) : 0, mio = conto.salvato || 0;
+      if (j.salvataggio && suServer && suServer > mio + 2000 && JSON.stringify(j.salvataggio) !== JSON.stringify(salvataggio())) {
+        applica(j.salvataggio); conto.salvato = suServer; salvaConto(); location.reload();
+      }
+    }).catch(function () { /* fuori rete: si gioca con quello che c'è */ });
+    window.addEventListener("pagehide", function () {
+      if (!conto || !attesaInvio) return;
+      // (chiudendo la pagina con un invio in sospeso: parte subito, senza aspettare la risposta)
+      try { fetch(API + "/salvataggio", { method: "PUT", keepalive: true, credentials: "omit", headers: { "Content-Type": "application/json", Authorization: "Bearer " + conto.token }, body: JSON.stringify({ salvataggio: salvataggio() }) }); } catch (e) { /* niente */ }
+    });
+  }
 
   // iPhone: con l'interruttore silenzioso Safari zittisce l'audio delle pagine. Dichiarato come
   // «riproduzione», suona come un'app di musica (Safari 17 e successivi; gli altri lo ignorano).

@@ -107,7 +107,7 @@
 /* ·· Fogli: menu, taratura, avvio ·· */
 .pbs-velo { position: absolute; inset: 0; background: rgba(6, 5, 12, .55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
 .pbs-foglio {
-  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: min(460px, 100%);
+  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: min(460px, 100%); box-sizing: border-box;
   max-height: 86vh; overflow: auto; padding: 10px 14px calc(var(--giu) + 16px); border-radius: 20px 20px 0 0;
   background: #17151f; border: 1px solid var(--filo); border-bottom: 0; box-shadow: 0 -12px 40px rgba(0, 0, 0, .5);
   animation: pbs-su .22s ease-out;
@@ -172,3 +172,21 @@
 @media (max-height: 460px) {
   .pbs-azioni { transform: scale(.86); transform-origin: right bottom; }
 }
+
+/* ---------- L'account (18/10/2026): nick, email, password ---------- */
+.pbs-schede { display: flex; gap: 6px; margin: 0 0 12px; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, .06); }
+.pbs-schede button { flex: 1; min-height: 34px; border: 0; border-radius: 999px; background: none; color: var(--tenue); font: inherit; font-weight: 800; font-size: 13px; cursor: pointer; }
+#pbs-hud .pbs-schede button[aria-selected="true"] { background: var(--oro); color: #17171c; }
+.pbs-foglio.pbs-account { padding-left: 18px; padding-right: 18px; }
+.pbs-modulo { display: grid; gap: 10px; }
+.pbs-modulo label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: var(--tenue); }
+.pbs-modulo input { box-sizing: border-box; width: 100%; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--filo); background: rgba(0, 0, 0, .35);
+                    color: var(--testo); font: inherit; font-size: 16px; font-weight: 600; outline: none; }
+.pbs-modulo input:focus { border-color: var(--oro); box-shadow: 0 0 0 3px rgba(255, 216, 74, .18); }
+.pbs-modulo .pbs-tasto { margin: 4px 0 0; width: 100%; box-sizing: border-box; min-height: 46px; border: 0; font: inherit; font-weight: 900; font-size: 15px; cursor: pointer; }
+.pbs-modulo .pbs-tasto[disabled] { opacity: .6; cursor: progress; }
+.pbs-errore { min-height: 18px; margin: 0; color: #ff8a80; font-size: 13px; font-weight: 700; }
+.pbs-profilo { display: flex; align-items: center; gap: 12px; margin: 4px 0 12px; }
+.pbs-profilo .tondo { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--oro); color: #17171c; font-weight: 900; font-size: 22px; }
+.pbs-profilo b { display: block; font-size: 17px; }
+.pbs-profilo small { color: var(--tenue); font-size: 12px; }

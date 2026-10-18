@@ -7,7 +7,7 @@
   // ·· Italiano per chi ha il telefono in italiano (il resto in inglese, com'è scritto nella pagina) ··
   var IT = {
     installa: "Installa", sotto: "L'orda attacca a tempo di musica. Para al momento giusto, concatena, sopravvivi.", gioca: "Gioca ora",
-    nota: "Gratis. Senza account. Funziona anche offline, una volta aperto.",
+    nota: "Gratis. L'account è facoltativo: tiene il tuo personaggio su ogni dispositivo. Funziona anche offline, una volta aperto.", account: "Account",
     t1: "Il parry è il gioco", p1: "Un anello si stringe intorno al tasto dello scudo e ne tocca il bordo nell'istante del colpo. Oro vuol dire adesso.",
     t2: "A tempo di musica", p2: "La musica guida l'orda: gli attacchi cadono sul battito e un «tic» li annuncia un battito prima. Gioca con l'audio.",
     t3: "Corsa survivor", p3: "Ondate infinite, armi che salgono di livello, un capo ogni pochi minuti e la classifica globale.",

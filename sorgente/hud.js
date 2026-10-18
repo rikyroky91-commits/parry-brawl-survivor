@@ -36,6 +36,11 @@
           comandi: "Comandi", comandiSotto: "PC: controller radiale e tastiera · Touch: tasti sullo schermo", auto: "Automatici", pc: "PC", touch: "Touch",
           menuPc: "Menu (M)", sito: "Menu del sito: musica, frecce, comandi",
           radiale: "Controller radiale", radialeSotto: "Le mosse in un ventaglio nell'angolo in basso a destra",
+          account: "Account", accountSotto: "Il tuo personaggio salvato: crediti, allenamento, record", accedi: "Accedi", registrati: "Registrati",
+          nick: "Nick", email: "Email", password: "Password", loginCampo: "Nick o email", entra: "Entra", crea: "Crea l'account",
+          esci2: "Esci dall'account", salvatoAlle: "Salvato alle", nonSalvato: "Non ancora salvato", attendi: "Un attimo…",
+          contoTesto: "Con un account il tuo personaggio (crediti, allenamento, missioni, record) resta salvato e lo ritrovi su ogni dispositivo.",
+          pwCorta: "La password deve avere almeno 8 caratteri", nickCorto: "Il nick va da 3 a 20 caratteri", mailNo: "Controlla l'email",
           instTitolo: "Installa Parry Brawl Survivor", instPc: "Sul telefono apri questo indirizzo, poi segui i passi qui sotto:", copia: "Copia", copiato: "Copiato",
           andTitolo: "Android: tutto il telefono è il ring", andTesto: "L'app usa le tue schermate vere come arena: Home, blocco schermo, qualsiasi app.",
           apk: "Scarica l'APK", apkArrivo: "APK in arrivo", apkInfo: "ultima versione",
@@ -59,6 +64,11 @@
           comandi: "Controls", comandiSotto: "PC: radial controller and keyboard · Touch: on-screen buttons", auto: "Automatic", pc: "PC", touch: "Touch",
           menuPc: "Menu (M)", sito: "Site menu: music, arrow keys, controls",
           radiale: "Radial controller", radialeSotto: "Your moves in a fan in the bottom-right corner",
+          account: "Account", accountSotto: "Your saved fighter: credits, training, records", accedi: "Log in", registrati: "Sign up",
+          nick: "Nickname", email: "Email", password: "Password", loginCampo: "Nickname or email", entra: "Log in", crea: "Create account",
+          esci2: "Log out", salvatoAlle: "Saved at", nonSalvato: "Not saved yet", attendi: "One moment…",
+          contoTesto: "With an account your fighter (credits, training, missions, records) stays saved and follows you to every device.",
+          pwCorta: "The password needs at least 8 characters", nickCorto: "The nickname must be 3 to 20 characters", mailNo: "Check the email",
           instTitolo: "Install Parry Brawl Survivor", instPc: "On your phone open this address, then follow the steps below:", copia: "Copy", copiato: "Copied",
           andTitolo: "Android: your whole phone is the ring", andTesto: "The app uses your real screens as the arena: home screen, lock screen, any app.",
           apk: "Download the APK", apkArrivo: "APK coming soon", apkInfo: "latest version",
@@ -457,8 +467,10 @@
     var mu = {}; try { mu = r.musica() || {}; } catch (e) { mu = {}; }
     var NOMI_MUSICA = { sempre: t.sempre, corsa: t.corsa, mai: t.mai };
     var dati = window.__ringDati || {}, tg = dati["pb-taglia"] || "medi";
+    var cs = window.__pbsAccount ? window.__pbsAccount.stato() : null;
     var righe = [
       ["▶️", t.riprendi, "", "", chiudiMenu],
+      ["👤", t.account, t.accountSotto, cs ? cs.nick : t.accedi, function () { chiudiMenu(); apriAccount(); }],
       ["🎵", t.musica, "", NOMI_MUSICA[mu.musica] || t.sempre, function () {
         var giro = ["sempre", "corsa", "mai"], prossimo = giro[(giro.indexOf(mu.musica) + 1) % 3];
         mu = r.musica({ musica: prossimo }); this.querySelector(".val").textContent = NOMI_MUSICA[prossimo];
@@ -502,7 +514,8 @@
   }
   window.__pbsFoglioTasto = function (ev) {
     if (!foglio) return false;
-    if (ev.code === "Escape" || (ev.code === "KeyM" && !ev.repeat)) { ev.preventDefault(); chiudiMenu(); }
+    var dove = ev.composedPath ? ev.composedPath()[0] : ev.target, scrive = !!(dove && /^(INPUT|TEXTAREA)$/.test(dove.tagName || ""));
+    if (ev.code === "Escape" || (ev.code === "KeyM" && !ev.repeat && !scrive)) { ev.preventDefault(); chiudiMenu(); }
     return true;
   };
   function tastoRadiale() { var rd = window.__ringRadice; return rd && rd.querySelector ? rd.querySelector(".tasto[data-radiale]") : null; }
@@ -516,6 +529,66 @@
     var r = R(); try { if (r && r.pannello()) r.pannello(false); } catch (e) { /* niente */ }
     if (tipo === "guida") apriInstalla(); else apriMenu();
   };
+
+  // ·· L'account: accedi o registrati; dentro, il profilo e l'ultimo salvataggio (la parte di rete sta in ospite.js) ··
+  function apriAccount(scheda) {
+    if (foglio) chiudiMenu();
+    var r = R(), A = window.__pbsAccount;
+    if (!A) return;
+    pausaPrima = !!(r && r.pausa()); if (r) r.pausa(true); menuAperto = true;
+    foglio = el("div", "tocca");
+    var velo = el("div", "pbs-velo"), f = el("div", "pbs-foglio pbs-account");
+    velo.addEventListener("click", chiudiMenu);
+    foglio.appendChild(velo); foglio.appendChild(f);
+    hud.appendChild(foglio); hud.classList.add("pbs-nascosti");
+    var cs = A.stato();
+    if (cs) {
+      var quando = cs.salvato ? t.salvatoAlle + " " + new Date(cs.salvato).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : t.nonSalvato;
+      f.innerHTML = "<h2>" + esc(t.account) + '</h2><div class="pbs-profilo"><span class="tondo">' + esc(cs.nick.charAt(0).toUpperCase()) + "</span><span><b>" + esc(cs.nick) +
+        "</b><small>" + esc(quando) + (cs.errore ? " · " + esc(cs.errore) : "") + '</small></span></div><p class="pbs-testo">' + esc(t.contoTesto) + "</p>" +
+        '<div class="pbs-modulo"><button class="pbs-tasto secondo" data-esci>' + esc(t.esci2) + '</button><button class="pbs-tasto" data-chiudi>' + esc(t.chiudi) + "</button></div>";
+      f.querySelector("[data-chiudi]").addEventListener("click", chiudiMenu);
+      f.querySelector("[data-esci]").addEventListener("click", function () { this.disabled = true; A.esci().then(function () { chiudiMenu(); apriAccount(); }); });
+      return;
+    }
+    var nuovo = scheda === "registrati";
+    f.innerHTML = "<h2>" + esc(t.account) + '</h2><p class="pbs-testo">' + esc(t.contoTesto) + "</p>" +
+      '<div class="pbs-schede" role="tablist"><button role="tab" data-scheda="accedi">' + esc(t.accedi) + '</button><button role="tab" data-scheda="registrati">' + esc(t.registrati) + "</button></div>" +
+      '<form class="pbs-modulo" novalidate>' +
+      '<label data-solo="registrati">' + esc(t.nick) + '<input name="nick" autocomplete="nickname" maxlength="20" spellcheck="false"></label>' +
+      '<label data-solo="registrati">' + esc(t.email) + '<input name="email" type="email" autocomplete="email" inputmode="email"></label>' +
+      '<label data-solo="accedi">' + esc(t.loginCampo) + '<input name="login" autocomplete="username" spellcheck="false"></label>' +
+      "<label>" + esc(t.password) + '<input name="password" type="password" autocomplete="current-password" minlength="8"></label>' +
+      '<p class="pbs-errore" aria-live="polite"></p><button class="pbs-tasto" type="submit"></button></form>';
+    var modulo = f.querySelector("form"), errore = f.querySelector(".pbs-errore"), invia = modulo.querySelector("[type=submit]");
+    function mostra(qual) {
+      nuovo = qual === "registrati";
+      f.querySelectorAll("[data-scheda]").forEach(function (b) { b.setAttribute("aria-selected", b.getAttribute("data-scheda") === qual ? "true" : "false"); });
+      f.querySelectorAll("[data-solo]").forEach(function (l) { l.hidden = l.getAttribute("data-solo") !== qual; });
+      modulo.password.setAttribute("autocomplete", nuovo ? "new-password" : "current-password");
+      invia.textContent = nuovo ? t.crea : t.entra; errore.textContent = "";
+    }
+    f.querySelectorAll("[data-scheda]").forEach(function (b) { b.addEventListener("click", function () { mostra(b.getAttribute("data-scheda")); }); });
+    mostra(nuovo ? "registrati" : "accedi");
+    modulo.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var v = function (n) { return String(modulo[n].value || "").trim(); }, pw = modulo.password.value || "";
+      if (nuovo) {
+        if (v("nick").length < 3 || v("nick").length > 20) { errore.textContent = t.nickCorto; return; }
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v("email"))) { errore.textContent = t.mailNo; return; }
+      }
+      if (pw.length < 8) { errore.textContent = t.pwCorta; return; }
+      invia.disabled = true; invia.textContent = t.attendi; errore.textContent = "";
+      (nuovo ? A.registra(v("nick"), v("email"), pw) : A.accedi(v("login"), pw))
+        .then(function (esito) { if (esito && esito.ricarica) return; chiudiMenu(); apriAccount(); })
+        .catch(function (e) { errore.textContent = e.message; invia.disabled = false; invia.textContent = nuovo ? t.crea : t.entra; });
+    });
+    // (la tastiera del gioco non deve prendersi le lettere scritte qui: le frecce, la S…)
+    modulo.addEventListener("keydown", function (ev) { ev.stopPropagation(); });
+    setTimeout(function () { try { (nuovo ? modulo.nick : modulo.login).focus(); } catch (e) { /* niente */ } }, 60);
+  }
+  // Aperta con ?account (dalla pagina d'ingresso): il foglio dell'account subito.
+  if (/[?&]account\b/.test(location.search)) setTimeout(function () { apriAccount(/[?&]account=registrati\b/.test(location.search) ? "registrati" : "accedi"); }, 400);
 
   // ·· Installa sul telefono ··
   // Android: l'APK dell'ultima release del repo (la fa .github/workflows/apk.yml), coi tre passi dell'installazione da

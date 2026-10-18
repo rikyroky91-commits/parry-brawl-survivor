@@ -76,7 +76,7 @@ TESTA = """  <title>Parry Brawl Survivor</title>
   <link rel="stylesheet" href="hud.css">
   <script>
     // Si parte nel cortile di pietra (l'arena della corsa); l'1 contro 1 passa alla lava da sé (ospite.js).
-    (function () { try { if (!/[?&]tipo=/.test(location.search)) history.replaceState(null, "", "?tipo=arena"); } catch (e) {} })();
+    (function () { try { if (!/[?&]tipo=/.test(location.search)) history.replaceState(null, "", (location.search ? location.search + "&" : "?") + "tipo=arena"); } catch (e) {} })();
   </script>"""
 
 
