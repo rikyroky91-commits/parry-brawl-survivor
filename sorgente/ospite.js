@@ -75,6 +75,9 @@
   window.__ringSuolo = true;
   // Accanto al menu iniziale, i personaggi con le loro doti da alzare coi crediti (il roster del motore).
   window.__ringRoster = true;
+  // Solo i super guerrieri di serie: classici, maghi e duellanti si sbloccano coi crediti (19/10/2026, vedi
+  // «LE FAMIGLIE DA SBLOCCARE» nel motore).
+  window.__ringSblocchi = true;
   window.__ringBordoOggetti = 0.1;
   window.__pbModo = "arena";
   window.__pbSalva = salva;

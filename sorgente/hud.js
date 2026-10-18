@@ -16,6 +16,7 @@
  *    l'arco della guardia. Con la musica il tasto respira sul battito. Tenuto premuto, si resta in guardia.
  *  - Intorno alla parata quattro abilità (nella corsa: colpo finale e i tre oggetti), che si colorano
  *    man mano che si ricaricano.
+ *  - Parata tenuta e dito in su: la fila di TUTTE le mosse speciali, dentro la fascia del terreno (vedi «Le speciali»).
  *  - Sul PC (18/10/2026, `window.__pbsPc`, deciso in ospite.js) niente di tutto questo: comanda il motore, col suo
  *    controller radiale, la tendina e la tastiera, come sul sito del tracker. Da qui restano il menu del sito (tasto
  *    ☰ in alto a sinistra, o M), la taratura dell'audio e le frecce facoltative.
@@ -34,7 +35,7 @@
           tara: "Sincronizza l'audio", taraSotto: "Con cuffie Bluetooth: tocca a tempo e il colpo arriva col suono", classifica: "Classifica globale",
           taglia: "Lottatori", piccoli: "Piccoli", medi: "Medi", grandi: "Grandi", app: "Tutto il telefono come ring", appSotto: "Con l'app Android (o installa questa pagina)",
           home: "Esci", taraTitolo: "Tocca a tempo", taraTesto: "Tocca il cerchio su ogni «tic», almeno otto volte.", fatto: "Fatto", rifai: "Rifai", chiudi: "Chiudi",
-          ritardo: "Ritardo", parry: "PARRY", perfetto: "PERFETTO", rotta: "GUARDIA ROTTA", ricarica: "Ricarica la pagina per cambiare misura", premi: "PREMI!", tieni: "TIENI!",
+          ritardo: "Ritardo", parry: "PARRY", perfetto: "PERFETTO", rotta: "GUARDIA ROTTA", ricarica: "Ricarica la pagina per cambiare misura", premi: "PREMI!", tieni: "TIENI!", tieniSu: "TIENI E SU ↑", speciali: "Speciali",
           installa: "Installa sul telefono", installaSotto: "Android: scarica l'APK · iPhone: aggiungi alla Home",
           frecce: "Frecce per guidare", frecceSotto: "← → cammina, ↑ vola, ↓ atterra. Spente, il lottatore va da solo", accese: "Accese", spente: "Spente",
           comandi: "Comandi", comandiSotto: "PC: controller radiale e tastiera · Touch: tasti sullo schermo", auto: "Automatici", pc: "PC", touch: "Touch",
@@ -64,7 +65,7 @@
           tara: "Sync audio", taraSotto: "With Bluetooth headphones: tap on the beat so hits land with the sound", classifica: "Global leaderboard",
           taglia: "Fighters", piccoli: "Small", medi: "Medium", grandi: "Large", app: "Your whole phone as the ring", appSotto: "With the Android app (or install this page)",
           home: "Exit", taraTitolo: "Tap on the beat", taraTesto: "Tap the circle on every \"tick\", at least eight times.", fatto: "Done", rifai: "Redo", chiudi: "Close",
-          ritardo: "Delay", parry: "PARRY", perfetto: "PERFECT", rotta: "GUARD BROKEN", ricarica: "Reload the page to change size", premi: "PRESS!", tieni: "HOLD!",
+          ritardo: "Delay", parry: "PARRY", perfetto: "PERFECT", rotta: "GUARD BROKEN", ricarica: "Reload the page to change size", premi: "PRESS!", tieni: "HOLD!", tieniSu: "HOLD & SLIDE ↑", speciali: "Specials",
           installa: "Install on your phone", installaSotto: "Android: download the APK · iPhone: add to Home Screen",
           frecce: "Arrow keys steer", frecceSotto: "← → walk, ↑ fly, ↓ land. Off: the fighter moves on its own", accese: "On", spente: "Off",
           comandi: "Controls", comandiSotto: "PC: radial controller and keyboard · Touch: on-screen buttons", auto: "Automatic", pc: "PC", touch: "Touch",
@@ -231,6 +232,7 @@
     }
     if (lotta) postiCorsa(corsaHud); else if (gioco) postiLibero(m); else for (var i = 0; i < 4; i++) abilita[i].e.hidden = true;
     aggiornaAura(m);
+    if (filaAperta) { if (!mostra) chiudiFila(); else aggiornaFila(); }
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
@@ -354,10 +356,10 @@
   function azione(id) { var r = R(); try { return r && r.premi ? r.premi(id) : false; } catch (e) { return false; } }
 
   // ·· La parata ··
-  var parataDito = null;
+  var parataDito = null, parataX = 0, parataY = 0;
   bParata.addEventListener("pointerdown", function (ev) {
     ev.preventDefault();
-    parataDito = ev.pointerId;
+    parataDito = ev.pointerId; parataX = ev.clientX; parataY = ev.clientY;
     // (su iPhone niente cattura: il clic deve arrivare all'interruttore del tic; lo stacco lo sente comunque la finestra)
     if (!IOS) try { bParata.setPointerCapture(ev.pointerId); } catch (e) { /* niente */ }
     premuta = performance.now();
@@ -367,8 +369,104 @@
     if (ev.pointerId !== parataDito) return;
     parataDito = null; premuta = 0;
     var r = R(); try { if (r && r.lascia) r.lascia("para"); } catch (e) { /* niente */ }
+    // (la fila aperta: lasciato su una mossa, parte; lasciato altrove, la fila aspetta un tocco per un paio di secondi)
+    if (filaAperta) {
+      if (ev.type === "pointerup" && filaSopra) { spara(filaSopra); chiudiFila(); }
+      else filaFino = Date.now() + 2600;
+    }
   }
   window.addEventListener("pointerup", parataFine, true); window.addEventListener("pointercancel", parataFine, true);
+
+  // ·· Le speciali (19/10/2026) ··
+  // Riccardo: «se si lascia premuto parata e si fa slide verso l'alto si ha accesso a tutte le mosse speciali; ricordati di
+  // non superare il terreno del layout». Tenendo la parata, il dito che sale di 28 px apre la fila: dentro la fascia del
+  // terreno, a sinistra della parata, al posto di aura e abilità (che intanto si nascondono), su due righe. Ci sono tutte
+  // le mosse del personaggio che si comanda (`mosse().voci`), tranne la parata e la carica dell'aura, che hanno già il loro
+  // tasto; quelle a energia si riempiono come le abilità. Il dito, ovunque sia, sceglie la mossa più vicina in orizzontale
+  // (si accende, il nome compare in alto nella fila) e lasciando parte (`ordina`). Lasciato senza sceglierne una (il dito
+  // tornato sopra la parata), la fila resta aperta per un tocco. Mentre si sceglie si resta in guardia.
+  var fila = el("div", "pbs-fila tocca"), filaNome = el("div", "pbs-fila-nome"), filaTasti = el("div", "pbs-fila-tasti");
+  fila.appendChild(filaNome); fila.appendChild(filaTasti); fila.hidden = true;
+  azioni.appendChild(fila);
+  var filaAperta = false, filaSopra = null, filaFino = 0, filaTastiVoci = [], filaChiave = "";
+  function chiDiFila() { return m ? (m.corsaHud ? m.corsaHud.chi : m.chi) : null; }
+  function vociFila() { return ((m && m.voci) || []).filter(function (v) { return v.id !== "para" && v.id !== "carica"; }); }
+  function apriFila() {
+    var voci = vociFila();
+    if (!voci.length) return;
+    filaAperta = true; filaSopra = null; filaFino = 0;
+    costruisciFila(voci);
+    fila.hidden = false; hud.classList.add("pbs-fila-su");
+    vibra("mossa");
+  }
+  function chiudiFila() {
+    filaAperta = false; filaSopra = null; filaFino = 0;
+    fila.hidden = true; hud.classList.remove("pbs-fila-su");
+  }
+  function costruisciFila(voci) {
+    var chiave = voci.map(function (v) { return v.id; }).join(",");
+    if (chiave !== filaChiave) {
+      filaChiave = chiave; filaTasti.innerHTML = ""; filaTastiVoci = [];
+      voci.forEach(function (v) {
+        var b = el("button", "pbs-spec tocca", "<span></span>");
+        b.firstChild.textContent = v.icona; b.setAttribute("aria-label", v.nome); b.setAttribute("data-id", v.id);
+        b.addEventListener("pointerdown", function (ev) { ev.preventDefault(); ev.stopPropagation(); spara(v.id); chiudiFila(); });
+        aptico(b);
+        filaTasti.appendChild(b); filaTastiVoci.push({ e: b, id: v.id });
+      });
+    }
+    // la misura: due righe nella fascia (alta come il gruppo, 104 px prima della scala), larga quanto serve e quanto c'è
+    var k = parseFloat(hud.style.getPropertyValue("--k")) || 1, colonne = Math.ceil(voci.length / 2);
+    var libero = (window.innerWidth - 24) / k - 114 - 8, lato = Math.max(30, Math.min(40, (libero + 5) / colonne - 5));
+    fila.style.setProperty("--b", lato.toFixed(1) + "px");
+    fila.style.width = Math.min(libero, colonne * (lato + 5) + 11).toFixed(1) + "px";
+    aggiornaFila();
+  }
+  function aggiornaFila() {
+    if (!filaAperta) return;
+    if (filaFino && Date.now() > filaFino && parataDito === null) { chiudiFila(); return; }
+    var voci = vociFila(), per = {}, io = null, chi = chiDiFila();
+    voci.forEach(function (v) { per[v.id] = v; });
+    ((m && m.lottatori) || []).forEach(function (l) { if (l.tipo === chi) io = l; });
+    if (io && io.colore) fila.style.setProperty("--colore", io.colore);
+    filaTastiVoci.forEach(function (t2) {
+      var v = per[t2.id], ki = io ? io.ki || 0 : 0;
+      var carica = !v ? 0 : v.costo > 0 ? Math.min(1, ki / v.costo) : 1, ok = !!(v && v.pronta);
+      t2.e.style.setProperty("--k", carica.toFixed(3));
+      t2.e.classList.toggle("scarica", !ok); t2.e.classList.toggle("pronta", ok);
+      t2.e.classList.toggle("sopra", filaSopra === t2.id);
+    });
+    var sv = filaSopra && per[filaSopra];
+    filaNome.textContent = sv ? sv.nome + (sv.costo ? "  · " + sv.costo : "") : t.speciali;
+  }
+  // il dito tenuto sulla parata: sale e apre la fila, poi scorre e sceglie
+  window.addEventListener("pointermove", function (ev) {
+    if (ev.pointerId !== parataDito) return;
+    var dx = ev.clientX - parataX, dy = parataY - ev.clientY;
+    if (!filaAperta) { if (dy > 28 && dy > Math.abs(dx) * 0.7) apriFila(); return; }
+    var meglio = null, d0 = 1e9, r0 = fila.getBoundingClientRect();
+    // (il dito tornato sopra la parata, a destra della fila: nessuna)
+    if (ev.clientX < r0.right + 6) {
+      var y = Math.max(r0.top, Math.min(r0.bottom, ev.clientY));
+      filaTastiVoci.forEach(function (t2) {
+        var r = t2.e.getBoundingClientRect(), d = Math.hypot(ev.clientX - (r.left + r.width / 2), (y - (r.top + r.height / 2)) * 0.6);
+        if (d < d0) { d0 = d; meglio = t2.id; }
+      });
+    }
+    if (meglio !== filaSopra) { filaSopra = meglio; if (meglio) vibra("leggero"); aggiornaFila(); }
+  }, true);
+  // un tocco fuori dalla fila (e fuori dalla parata) la chiude
+  window.addEventListener("pointerdown", function (ev) {
+    if (!filaAperta || ev.pointerId === parataDito) return;
+    if (ev.target && ev.target.closest && (ev.target.closest(".pbs-fila") || ev.target.closest(".pbs-parata"))) return;
+    chiudiFila();
+  }, true);
+  function spara(id) {
+    var r = R(), ok = false;
+    try { ok = !!(r && r.ordina && r.ordina(chiDiFila(), id)); } catch (e) { ok = false; }
+    vibra(ok ? "forte" : "no");
+    return ok;
+  }
 
   var eraRotta = false, premuta = 0, ultimoParry = 1e9, ultimoColpo = 1e9, scoppi = [], scossa = 0, dpr = 1, g = null;
   function preparaTela() {
@@ -489,7 +587,7 @@
     // La guida del motore ha fermato il tempo e aspetta il tasto: la parata pulsa e dice «PREMI» (o «TIENI»).
     var chiama = !!tp.fermo;
     if (chiama !== bParata.classList.contains("chiama")) { bParata.classList.toggle("chiama", chiama); if (chiama) vibra("mossa"); }
-    if (chiama) bParata.setAttribute("data-chiama", tp.aiuto === "parata" ? t.tieni : t.premi);
+    if (chiama) bParata.setAttribute("data-chiama", tp.aiuto === "parata" ? t.tieni : tp.aiuto === "speciali" ? t.tieniSu : t.premi);
     disegnaParata(tp, ora);
   }
   requestAnimationFrame(ciclo);

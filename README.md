@@ -16,7 +16,7 @@ e ci aggiunge quello che è solo del sito:
 | --- | --- |
 | `sorgente/index.html`, `sito.css`, `sito.js` | pagina d'ingresso: gioca, scelta dell'arena, installazione per piattaforma |
 | `sorgente/ospite.js` | il ponte col browser (memoria in `localStorage`, classifica, nome e musica di serie) |
-| `sorgente/hud.js`, `hud.css` | i comandi touch: capsula, croce, volo, tasto Parata, abilità, menu, taratura dell'audio |
+| `sorgente/hud.js`, `hud.css` | i comandi touch: capsula, croce, volo, tasto Parata (tenuto e dito in su: la fila delle speciali), abilità, menu, taratura dell'audio |
 | `sorgente/manifest.webmanifest`, `icone/` | la web app installabile |
 | `strumenti/icone.py` | rigenera le icone |
 | `costruisci.py` | costruisce `dist/` (con `gioca.html` fatta dall'arena del motore e il service worker per l'offline) |
