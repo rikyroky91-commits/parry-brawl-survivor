@@ -34,7 +34,7 @@
           tara: "Sincronizza l'audio", taraSotto: "Con cuffie Bluetooth: tocca a tempo e il colpo arriva col suono", classifica: "Classifica globale",
           taglia: "Lottatori", piccoli: "Piccoli", medi: "Medi", grandi: "Grandi", app: "Tutto il telefono come ring", appSotto: "Con l'app Android (o installa questa pagina)",
           home: "Esci", taraTitolo: "Tocca a tempo", taraTesto: "Tocca il cerchio su ogni «tic», almeno otto volte.", fatto: "Fatto", rifai: "Rifai", chiudi: "Chiudi",
-          ritardo: "Ritardo", parry: "PARRY", perfetto: "PERFETTO", rotta: "GUARDIA ROTTA", ricarica: "Ricarica la pagina per cambiare misura",
+          ritardo: "Ritardo", parry: "PARRY", perfetto: "PERFETTO", rotta: "GUARDIA ROTTA", ricarica: "Ricarica la pagina per cambiare misura", premi: "PREMI!", tieni: "TIENI!",
           installa: "Installa sul telefono", installaSotto: "Android: scarica l'APK · iPhone: aggiungi alla Home",
           frecce: "Frecce per guidare", frecceSotto: "← → cammina, ↑ vola, ↓ atterra. Spente, il lottatore va da solo", accese: "Accese", spente: "Spente",
           comandi: "Comandi", comandiSotto: "PC: controller radiale e tastiera · Touch: tasti sullo schermo", auto: "Automatici", pc: "PC", touch: "Touch",
@@ -64,7 +64,7 @@
           tara: "Sync audio", taraSotto: "With Bluetooth headphones: tap on the beat so hits land with the sound", classifica: "Global leaderboard",
           taglia: "Fighters", piccoli: "Small", medi: "Medium", grandi: "Large", app: "Your whole phone as the ring", appSotto: "With the Android app (or install this page)",
           home: "Exit", taraTitolo: "Tap on the beat", taraTesto: "Tap the circle on every \"tick\", at least eight times.", fatto: "Done", rifai: "Redo", chiudi: "Close",
-          ritardo: "Delay", parry: "PARRY", perfetto: "PERFECT", rotta: "GUARD BROKEN", ricarica: "Reload the page to change size",
+          ritardo: "Delay", parry: "PARRY", perfetto: "PERFECT", rotta: "GUARD BROKEN", ricarica: "Reload the page to change size", premi: "PRESS!", tieni: "HOLD!",
           installa: "Install on your phone", installaSotto: "Android: download the APK · iPhone: add to Home Screen",
           frecce: "Arrow keys steer", frecceSotto: "← → walk, ↑ fly, ↓ land. Off: the fighter moves on its own", accese: "On", spente: "Off",
           comandi: "Controls", comandiSotto: "PC: radial controller and keyboard · Touch: on-screen buttons", auto: "Automatic", pc: "PC", touch: "Touch",
@@ -486,6 +486,10 @@
     eraRotta = tp.rotta;
     ultimoColpo = tp.colpito;
     if (tp.catena >= 2) { catena.hidden = false; catena.textContent = "×" + tp.catena; } else catena.hidden = true;
+    // La guida del motore ha fermato il tempo e aspetta il tasto: la parata pulsa e dice «PREMI» (o «TIENI»).
+    var chiama = !!tp.fermo;
+    if (chiama !== bParata.classList.contains("chiama")) { bParata.classList.toggle("chiama", chiama); if (chiama) vibra("mossa"); }
+    if (chiama) bParata.setAttribute("data-chiama", tp.aiuto === "parata" ? t.tieni : t.premi);
     disegnaParata(tp, ora);
   }
   requestAnimationFrame(ciclo);

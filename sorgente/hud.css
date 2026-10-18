@@ -68,6 +68,20 @@
 .pbs-parata .scritta.perfetto { font-size: 18px; color: #fff6c4; }
 .pbs-parata .scritta.rossa { color: #ff8a80; text-shadow: 0 2px 0 #17171c; }
 @keyframes pbs-scritta { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.7); } 15% { opacity: 1; transform: translate(-50%, -6px) scale(1.12); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -26px) scale(1); } }
+/* La guida ha fermato il tempo (vedi «La guida, giocata» nel motore): la parata pulsa d'oro e sopra dice cosa fare. */
+.pbs-parata.chiama { animation: pbs-chiama .7s ease-in-out infinite; }
+.pbs-parata.chiama::before {
+  content: ""; position: absolute; inset: -14px; border-radius: 50%; border: 3px solid var(--oro); pointer-events: none;
+  box-shadow: 0 0 22px rgba(255, 216, 74, .75), inset 0 0 14px rgba(255, 216, 74, .45); animation: pbs-anello .7s ease-out infinite;
+}
+.pbs-parata.chiama::after {
+  content: attr(data-chiama); position: absolute; left: 50%; bottom: calc(100% + 12px); transform: translateX(-50%); white-space: nowrap;
+  padding: 5px 12px; border-radius: 999px; background: var(--oro); color: #17171c; font-weight: 900; font-size: 15px; letter-spacing: .04em;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .4); pointer-events: none;
+}
+@keyframes pbs-chiama { 50% { transform: scale(1.08); } }
+@keyframes pbs-anello { from { transform: scale(.9); opacity: 1; } to { transform: scale(1.18); opacity: .2; } }
+@media (prefers-reduced-motion: reduce) { .pbs-parata.chiama, .pbs-parata.chiama::before { animation: none; } }
 .pbs-catena {
   position: absolute; right: 0; top: 0; min-width: 30px; height: 24px; padding: 0 7px; border-radius: 12px;
   display: grid; place-items: center; font-weight: 900; font-size: 13px; color: #17171c; background: var(--oro);
