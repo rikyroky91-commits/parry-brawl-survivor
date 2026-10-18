@@ -40,8 +40,31 @@
   };
   window.__ringDati = dati;
   window.__lingueSoloDizionario = true;
-  // Vita, punteggio, abilità, parata: li disegna il sito (hud.js), non il canvas.
-  window.__ringHudEsterno = true;
+
+  // ·· PC o telefono (18/10/2026, Riccardo: «riconosca se sei su pc o mobile e quando sei su pc i comandi devono essere
+  // come quelli della pagina web, cioè con i comandi radiali») ··
+  // Telefono e tablet: i comandi touch del sito (hud.js) al posto di quelli del motore. PC: i comandi del motore, come
+  // sul sito del tracker e nell'estensione (controller radiale, tendina, tastiera, anello del parry sul lottatore).
+  // Si decide da sé; si forza col menu (`pbs-comandi`: "pc" o "touch", poi si ricarica) o con ?comandi=pc|touch.
+  function comandiPc() {
+    var q = /[?&]comandi=(pc|touch)\b/.exec(location.search);
+    if (q) return q[1] === "pc";
+    if (dati["pbs-comandi"] === "pc" || dati["pbs-comandi"] === "touch") return dati["pbs-comandi"] === "pc";
+    var ua = navigator.userAgent || "";
+    if (/Android|iPhone|iPad|iPod|Mobile|Silk|Kindle/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return false;
+    var mm = window.matchMedia ? function (q) { return window.matchMedia(q).matches; } : function () { return false; };
+    // (un portatile col touch ma col mouse o il touchpad è un PC; uno schermo solo a dita, no)
+    if (mm("(any-pointer: fine)")) return true;
+    return !mm("(pointer: coarse)");
+  }
+  window.__pbsPc = comandiPc();
+  document.documentElement.classList.add(window.__pbsPc ? "pbs-pc" : "pbs-touch");
+  // Le frecce per guidare il lottatore: facoltative e spente di serie (Riccardo: «deve essere una cosa opzionale, il
+  // personaggio si muove da solo»). Accese: ← → camminano, ↑ decolla, ↓ atterra; lasciate, torna a fare da sé.
+  window.__pbsFrecce = dati["pbs-frecce"] === "on";
+
+  // Telefono: vita, punteggio, abilità, parata li disegna il sito (hud.js), non il canvas. PC: li disegna il motore.
+  window.__ringHudEsterno = !window.__pbsPc;
   window.__ringBordoOggetti = 0.1;
   window.__pbModo = "arena";
   window.__pbSalva = salva;
@@ -83,9 +106,39 @@
   // I tocchi passano prima dal sito, poi dal motore: il motore ascolta `pointerdown` sulla finestra in fase di cattura,
   // e chi si registra prima viene servito prima. Qui (caricato prima di ring.js) si mette il gancio; la croce
   // invisibile di hud.js (`window.__pbsTocco`) decide se il tocco è suo e allora lo ferma.
-  ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(function (tipo) {
+  if (!window.__pbsPc) ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(function (tipo) {
     window.addEventListener(tipo, function (ev) { if (typeof window.__pbsTocco === "function") window.__pbsTocco(ev); }, { capture: true, passive: false });
   });
+
+  // ·· Le frecce (vedi `__pbsFrecce`) ··
+  // Registrato prima del motore, che ascolta la tastiera anche lui in fase di cattura: in lotta le frecce le prende il
+  // sito. Spente non fanno niente (il lottatore va da sé); accese ← → camminano (anche tenute premute) e ↑ ↓ decollano
+  // e atterrano, con la tastiera del motore accesa o spenta. Nei menu, nella scelta delle carte, nella mira e mentre si
+  // scrive il nome in classifica restano del motore, come sempre.
+  var FRECCE = { ArrowLeft: "sinistra", ArrowRight: "destra", ArrowUp: "su", ArrowDown: "giu" };
+  function inLotta(r) {
+    var m;
+    try { m = r.mosse(); if (r.pausa() || r.pannello()) return null; } catch (e) { return null; }
+    if (!m.acceso || m.menu || m.scelta || m.vuoleTocchi) return null;
+    if (m.corsa && !(m.corsaHud && m.corsaHud.fase === "lotta")) return null;
+    return m;
+  }
+  window.addEventListener("keydown", function (ev) {
+    var id = FRECCE[ev.code];
+    if (!id || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    var dove = ev.composedPath ? ev.composedPath()[0] : ev.target;
+    if (dove && (/^(INPUT|TEXTAREA|SELECT)$/.test(dove.tagName || "") || dove.isContentEditable)) return;
+    var r = window.__ring, m = r && r.mosse ? inLotta(r) : null;
+    if (!m) return;
+    ev.preventDefault(); ev.stopImmediatePropagation();
+    if (!window.__pbsFrecce) return;
+    try {
+      if (id === "sinistra" || id === "destra") { r.premi(id); return; }
+      if (ev.repeat) return;
+      var chi = m.corsaHud ? m.corsaHud.chi : m.chi, io = (m.lottatori || []).filter(function (l) { return l.tipo === chi; })[0];
+      if ((id === "su") !== !!(io && io.vola)) r.premi("vola");
+    } catch (e) { /* niente */ }
+  }, true);
 
   // iPhone: con l'interruttore silenzioso Safari zittisce l'audio delle pagine. Dichiarato come
   // «riproduzione», suona come un'app di musica (Safari 17 e successivi; gli altri lo ignorano).

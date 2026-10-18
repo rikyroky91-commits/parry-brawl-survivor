@@ -22,7 +22,7 @@
     and2: "Quando Android lo chiede, consenti a Chrome di <b>installare app sconosciute</b>, poi <b>Installa</b>.",
     and3: "Android 13 e successivi: se l'interruttore dell'accessibilità è grigio, apri <b>Info app → ⋮ → Consenti impostazioni con restrizioni</b>. L'app legge solo dove stanno gli elementi sullo schermo, mai il loro testo.",
     androidPwa: "Non vuoi installare un APK? In Chrome usa", aggiungi: "Aggiungi a schermata Home", androidPwa2: "per il gioco a schermo intero.",
-    pcTitolo: "Sul computer", pcTesto: "Gioca qui con la tastiera (S per il parry, frecce per muoverti), oppure metti i lottatori su ogni pagina web con l'estensione per Chrome.",
+    pcTitolo: "Sul computer", pcTesto: "Gioca qui con mouse e tastiera: il controller radiale, S per il parry. Le frecce guidano il lottatore se le accendi dal menu (☰ o M); sennò va da solo. Oppure metti i lottatori su ogni pagina web con l'estensione per Chrome.",
     estensione: "Estensione per Chrome", altre: "Mostra tutte le piattaforme",
     privacy: "Niente pubblicità, niente tracciamento. Le impostazioni restano sul tuo dispositivo. Si inviano solo il nome che scegli per la classifica e il punteggio, quando li mandi tu.",
     inArrivo: "in arrivo", versione: "versione",

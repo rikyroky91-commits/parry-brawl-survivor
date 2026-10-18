@@ -87,7 +87,9 @@ def gioca_html(arena):
         ('  <script src="lingue.js"></script>', '  <script src="motore/lingue.js"></script>'),
         ('  <script src="prepara.js"></script>', '  <script src="motore/prepara.js"></script>'),
         ('  <script src="ring.js"></script>', '  <script src="motore/ring.js"></script>'),
-        ('  <script src="comandi.js"></script>', '  <script src="motore/comandi.js"></script>\n  <script src="hud.js"></script>'),
+        # (sul PC lo stile da telefono di comandi.js nasconderebbe i tasti del motore: così comandi.js si ferma subito)
+        ('  <script src="comandi.js"></script>', '  <script>if (window.__pbsPc && window.__ringRadice) window.__ringRadice.__pbComandi = true;</script>\n'
+                                               '  <script src="motore/comandi.js"></script>\n  <script src="hud.js"></script>'),
     ], "arena.html")
 
 

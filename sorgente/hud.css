@@ -140,6 +140,33 @@
   border-radius: 999px; font-weight: 800; background: var(--oro); color: #17171c !important;
 }
 .pbs-tasto.secondo { background: rgba(255, 255, 255, .1); color: var(--testo) !important; }
+/* (i tasti del sito sono <button>: `#pbs-hud button` toglie lo sfondo a tutti, qui lo si rimette) */
+#pbs-hud .pbs-tasto { background: var(--oro); }
+#pbs-hud .pbs-tasto.secondo { background: rgba(255, 255, 255, .1); }
+
+/* ·· Sul PC (18/10/2026): comanda il motore (controller radiale, tendina, tastiera); il menu del sito è nella sua barretta ·· */
+.pbs-pc .pbs-capsula, .pbs-pc .pbs-croce, .pbs-pc .pbs-azioni { display: none !important; }
+.pbs-pc .pbs-foglio { bottom: 50%; transform: translate(-50%, 50%); border-radius: 20px; border-bottom: 1px solid var(--filo); padding-bottom: 16px; animation: none; }
+.pbs-pc .pbs-foglio::before { display: none; }
+
+/* ·· Installa sul telefono ·· */
+.pbs-installa h2 { margin-bottom: 6px; }
+.pbs-installa h3 { margin: 0 0 4px; font-size: 15px; font-weight: 900; }
+.pbs-piatt { margin: 12px 0 0; padding: 12px; border-radius: 14px; background: rgba(255, 255, 255, .05); border: 1px solid var(--filo); }
+.pbs-testo { margin: 0 0 10px; color: var(--tenue); font-weight: 500; font-size: 13px; }
+.pbs-nota { margin: 8px 0 0; color: var(--tenue); font-weight: 500; font-size: 12px; }
+.pbs-nota b, .pbs-passi b { color: var(--testo); }
+.pbs-passi { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.pbs-passi li { display: flex; gap: 10px; align-items: flex-start; font-weight: 500; font-size: 13.5px; }
+.pbs-passi .num { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--oro); color: #17171c; font-weight: 900; font-size: 12px; }
+.pbs-cond { width: 18px; height: 18px; fill: var(--azzurro); vertical-align: -3px; }
+.pbs-apk { display: flex; margin: 0; text-decoration: none; }
+.pbs-apk small { font-weight: 600; opacity: .7; margin-left: 4px; }
+#pbs-hud .pbs-apk.spento { background: rgba(255, 255, 255, .1); color: var(--tenue) !important; pointer-events: none; }
+.pbs-indirizzo { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: rgba(0, 0, 0, .3); border: 1px solid var(--filo); }
+.pbs-indirizzo code { flex: 1; min-width: 0; overflow-wrap: anywhere; font: 600 13px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--oro); }
+.pbs-indirizzo .pbs-tasto { min-height: 36px; padding: 0 14px; margin: 0; }
+.pbs-chiudi { display: flex; width: calc(100% - 8px); margin-top: 14px; }
 
 /* Telefono in orizzontale: tutto un po' più compatto. */
 @media (max-height: 460px) {

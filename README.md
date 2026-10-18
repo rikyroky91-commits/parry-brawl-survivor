@@ -45,6 +45,21 @@ cd dist && python3 -m http.server 8000               # http://localhost:8000
   La chiave va conservata fuori dal repo: se si perde, chi ha già l'APK non riceve più aggiornamenti senza
   disinstallare. Senza i segreti il sito mostra «APK in arrivo».
 
+## PC e telefono
+
+`ospite.js` decide all'apertura (`window.__pbsPc`):
+
+- **Telefono e tablet** (Android, iPhone, iPad, schermo solo touch): i comandi touch di `hud.js` (croce invisibile,
+  tasto Parata a tempo, Aura, abilità) e il cruscotto disegnato dal sito.
+- **PC** (mouse o touchpad): i comandi del motore, come sul sito del tracker e nell'estensione: controller radiale,
+  tendina, tastiera (S parry, W A D, Z X C V…), cruscotto sul canvas. Il menu del sito è il tasto ☰ nella barretta
+  in basso a destra, o **M**.
+- **Frecce** (facoltative, spente di serie): accese dal menu, ← → camminano, ↑ decolla, ↓ atterra; spente o lasciate,
+  il lottatore va da solo. Nei menu e nella scelta delle carte le frecce restano del motore.
+- Il menu → **Comandi** forza PC o Touch (si ricarica); `?comandi=pc` o `?comandi=touch` vale per una visita.
+- Il menu → **Installa sul telefono**: APK per Android (dall'ultima release), «Aggiungi alla schermata Home» per
+  iPhone; sul PC tutte e due, con l'indirizzo da aprire sul telefono.
+
 ## Cose da sapere
 
 - La classifica globale passa dal server di Mobile Update Tracker (`/api/corsa`): se quel sito cambia dominio,

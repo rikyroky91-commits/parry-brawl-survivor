@@ -12,6 +12,11 @@
  *    l'arco della guardia. Con la musica il tasto respira sul battito. Tenuto premuto, si resta in guardia.
  *  - Intorno alla parata quattro abilità (nella corsa: colpo finale e i tre oggetti), che si colorano
  *    man mano che si ricaricano.
+ *  - Sul PC (18/10/2026, `window.__pbsPc`, deciso in ospite.js) niente di tutto questo: comanda il motore, col suo
+ *    controller radiale, la tendina e la tastiera, come sul sito del tracker. Da qui restano il menu del sito (tasto
+ *    ☰ in alto a sinistra, o M), la taratura dell'audio e le frecce facoltative.
+ *  - Nel menu «Installa sul telefono»: l'APK per Android, «Aggiungi alla schermata Home» per iPhone (Riccardo: «dal
+ *    menu della web app dai le istruzioni per scaricare l'apk per android o aggiungere alla home da iphone»).
  * Tutto passa da `window.__ring` (il motore): `mosse()` ogni 120 ms, `tempoParry()` a ogni fotogramma,
  * `premi(id)` / `lascia(id)` per le azioni dei tasti, `musica()` e `calibra()` per l'audio.
  */
@@ -25,17 +30,50 @@
           tara: "Sincronizza l'audio", taraSotto: "Con cuffie Bluetooth: tocca a tempo e il colpo arriva col suono", classifica: "Classifica globale",
           taglia: "Lottatori", piccoli: "Piccoli", medi: "Medi", grandi: "Grandi", app: "Tutto il telefono come ring", appSotto: "Con l'app Android (o installa questa pagina)",
           home: "Esci", taraTitolo: "Tocca a tempo", taraTesto: "Tocca il cerchio su ogni «tic», almeno otto volte.", fatto: "Fatto", rifai: "Rifai", chiudi: "Chiudi",
-          ritardo: "Ritardo", parry: "PARRY", perfetto: "PERFETTO", rotta: "GUARDIA ROTTA", ricarica: "Ricarica la pagina per cambiare misura" },
+          ritardo: "Ritardo", parry: "PARRY", perfetto: "PERFETTO", rotta: "GUARDIA ROTTA", ricarica: "Ricarica la pagina per cambiare misura",
+          installa: "Installa sul telefono", installaSotto: "Android: scarica l'APK · iPhone: aggiungi alla Home",
+          frecce: "Frecce per guidare", frecceSotto: "← → cammina, ↑ vola, ↓ atterra. Spente, il lottatore va da solo", accese: "Accese", spente: "Spente",
+          comandi: "Comandi", comandiSotto: "PC: controller radiale e tastiera · Touch: tasti sullo schermo", auto: "Automatici", pc: "PC", touch: "Touch",
+          menuPc: "Menu (M)", sito: "Menu del sito: musica, frecce, comandi",
+          instTitolo: "Installa Parry Brawl Survivor", instPc: "Sul telefono apri questo indirizzo, poi segui i passi qui sotto:", copia: "Copia", copiato: "Copiato",
+          andTitolo: "Android: tutto il telefono è il ring", andTesto: "L'app usa le tue schermate vere come arena: Home, blocco schermo, qualsiasi app.",
+          apk: "Scarica l'APK", apkArrivo: "APK in arrivo", apkInfo: "ultima versione",
+          and1: "Apri il file scaricato. Chrome avvisa che potrebbe essere dannoso: è l'avviso di sempre per le app fuori dal Play Store. Tocca <b>Scarica comunque</b>.",
+          and2: "Consenti a Chrome di <b>installare app sconosciute</b>, poi <b>Installa</b>.",
+          and3: "Android 13 e successivi: se l'interruttore dell'accessibilità è grigio, apri <b>Info app → ⋮ → Consenti impostazioni con restrizioni</b>.",
+          andWeb: "Senza APK: in Chrome <b>⋮ → Aggiungi a schermata Home</b>, per il gioco a schermo intero.", webApp: "Installa come web app",
+          iosTitolo: "iPhone e iPad: aggiungi alla Home", iosGia: "È già sulla tua schermata Home: aprila da lì per giocare a schermo intero.",
+          ios1: "Apri questa pagina in <b>Safari</b>.", ios2: "Tocca <b>Condividi</b> {icona} (in Safari è nella barra in basso).",
+          ios3: "Scorri e scegli <b>Aggiungi alla schermata Home</b>, poi <b>Aggiungi</b>.",
+          iosNota: "Su iPhone nessuna app può disegnare sopra la Home o le altre app: lì il gioco è a schermo intero.",
+          pcWeb: "Installalo anche sul computer, in una finestra sua:", pcTitolo: "Su questo computer" },
     en: { aura: "AURA", limit: "LIMIT", pausa: "Paused", menu: "Menu", riprendi: "Resume", opzioni: "Ring options",
           opzioniSotto: "Characters, events, graphics, keys", musica: "Music", sempre: "Always", corsa: "Only in the run", mai: "Off",
           tara: "Sync audio", taraSotto: "With Bluetooth headphones: tap on the beat so hits land with the sound", classifica: "Global leaderboard",
           taglia: "Fighters", piccoli: "Small", medi: "Medium", grandi: "Large", app: "Your whole phone as the ring", appSotto: "With the Android app (or install this page)",
           home: "Exit", taraTitolo: "Tap on the beat", taraTesto: "Tap the circle on every \"tick\", at least eight times.", fatto: "Done", rifai: "Redo", chiudi: "Close",
-          ritardo: "Delay", parry: "PARRY", perfetto: "PERFECT", rotta: "GUARD BROKEN", ricarica: "Reload the page to change size" },
+          ritardo: "Delay", parry: "PARRY", perfetto: "PERFECT", rotta: "GUARD BROKEN", ricarica: "Reload the page to change size",
+          installa: "Install on your phone", installaSotto: "Android: download the APK · iPhone: add to Home Screen",
+          frecce: "Arrow keys steer", frecceSotto: "← → walk, ↑ fly, ↓ land. Off: the fighter moves on its own", accese: "On", spente: "Off",
+          comandi: "Controls", comandiSotto: "PC: radial controller and keyboard · Touch: on-screen buttons", auto: "Automatic", pc: "PC", touch: "Touch",
+          menuPc: "Menu (M)", sito: "Site menu: music, arrow keys, controls",
+          instTitolo: "Install Parry Brawl Survivor", instPc: "On your phone open this address, then follow the steps below:", copia: "Copy", copiato: "Copied",
+          andTitolo: "Android: your whole phone is the ring", andTesto: "The app uses your real screens as the arena: home screen, lock screen, any app.",
+          apk: "Download the APK", apkArrivo: "APK coming soon", apkInfo: "latest version",
+          and1: "Open the downloaded file. Chrome warns it could be harmful: it is the standard warning for apps from outside the Play Store. Tap <b>Download anyway</b>.",
+          and2: "Allow Chrome to <b>install unknown apps</b>, then <b>Install</b>.",
+          and3: "Android 13 or later: if the accessibility switch is grey, open <b>App info → ⋮ → Allow restricted settings</b>.",
+          andWeb: "No APK: in Chrome use <b>⋮ → Add to Home screen</b> for the full-screen game.", webApp: "Install as a web app",
+          iosTitolo: "iPhone and iPad: add to Home Screen", iosGia: "It is already on your Home Screen: open it from there to play full screen.",
+          ios1: "Open this page in <b>Safari</b>.", ios2: "Tap <b>Share</b> {icona} (in Safari it is in the bottom bar).",
+          ios3: "Scroll down, choose <b>Add to Home Screen</b>, then <b>Add</b>.",
+          iosNota: "On iPhone no app can draw over the home screen or other apps, so there the game runs full screen.",
+          pcWeb: "You can also install it on this computer, in its own window:", pcTitolo: "On this computer" },
   };
   var t = T[lingua] || T.en;
 
   var R = function () { return window.__ring || null; };
+  var PC = !!window.__pbsPc;
   // ·· La vibrazione ··
   // Android: l'API Vibration, con schemi diversi per tipo di tasto. iPhone non ce l'ha: da iOS 18 Safari dà il «tic»
   // aptico del sistema quando cambia un interruttore (<input type=checkbox switch>), ma solo dentro un gesto vero, e per
@@ -95,6 +133,8 @@
     azioni.appendChild(a); abilita.push({ e: a, id: null });
   }
   hud.appendChild(capsula); hud.appendChild(croce); hud.appendChild(azioni);
+  // Sul PC i comandi touch non servono (li nasconde hud.css): il menu del sito è un tasto in più nella barretta del
+  // motore, accanto al controller e alla tendina (vedi «Sul PC»).
   document.body.appendChild(hud);
 
   function mkAvatar() {
@@ -120,10 +160,10 @@
     var corsaHud = m.corsaHud, lotta = corsaHud && corsaHud.fase === "lotta", gioco = !m.scelta && !m.corsa;
     // I comandi si tolgono quando il canvas vuole i tocchi (scelta del modo, carte, mira, classifica), con la tendina
     // o il menu aperti, in pausa e a lotte spente.
-    mostra = avviato && m.acceso && !m.vuoleTocchi && !pannello && !menuAperto && !inPausa && (gioco || lotta);
+    mostra = !PC && avviato && m.acceso && !m.vuoleTocchi && !pannello && !menuAperto && !inPausa && (gioco || lotta);
     hud.classList.toggle("pbs-nascosti", !mostra);
     // La capsula solo a lotta in corso (o in pausa): sopra i menu del motore coprirebbe i titoli.
-    var conCapsula = avviato && m.acceso && !pannello && !m.menu && !m.scelta && (inPausa || lotta || (gioco && !m.vuoleTocchi));
+    var conCapsula = !PC && avviato && m.acceso && !pannello && !m.menu && !m.scelta && (inPausa || lotta || (gioco && !m.vuoleTocchi));
     capsula.style.opacity = conCapsula ? "1" : "0";
     capsula.style.pointerEvents = conCapsula ? "auto" : "none";
     bPausa.innerHTML = inPausa ? ICONE.gioca : ICONE.pausa;
@@ -423,9 +463,22 @@
         if (window.__pbSalva) window.__pbSalva({ "pb-taglia": tg });
         this.querySelector(".val").textContent = { piccoli: t.piccoli, medi: t.medi, grandi: t.grandi }[tg];
       }],
-      ["📱", t.app, t.appSotto, "", function () { location.href = "./#installa"; }],
+      ["📲", t.installa, t.installaSotto, "", function () { chiudiMenu(); apriInstalla(); }],
+      ["🖥️", t.comandi, t.comandiSotto, nomeComandi(), function () {
+        // auto → PC → touch → auto; vale dopo aver ricaricato la pagina (il motore parte in un modo o nell'altro)
+        var giro = ["", "pc", "touch"], ora = dati["pbs-comandi"] || "", dopo = giro[(giro.indexOf(ora) + 1) % 3];
+        if (window.__pbSalva) window.__pbSalva({ "pbs-comandi": dopo });
+        dati["pbs-comandi"] = dopo;
+        this.querySelector(".val").textContent = nomeComandi();
+        setTimeout(function () { location.replace(location.pathname + location.search.replace(/[?&]comandi=(pc|touch)\b/, "")); }, 350);
+      }],
       ["🚪", t.home, "", "", function () { location.href = "./"; }],
     ];
+    if (PC) righe.splice(3, 0, ["⌨️", t.frecce, t.frecceSotto, window.__pbsFrecce ? t.accese : t.spente, function () {
+      window.__pbsFrecce = !window.__pbsFrecce;
+      if (window.__pbSalva) window.__pbSalva({ "pbs-frecce": window.__pbsFrecce ? "on" : "off" });
+      this.querySelector(".val").textContent = window.__pbsFrecce ? t.accese : t.spente;
+    }]);
     var h = el("h2", "", "Parry Brawl Survivor"); f.appendChild(h);
     righe.forEach(function (q) {
       var b = el("button", "pbs-riga", '<span class="ico">' + q[0] + '</span><span class="nome">' + esc(q[1]) + (q[2] ? "<small>" + esc(q[2]) + "</small>" : "") + '</span><span class="val">' + esc(q[3] || "") + "</span>");
@@ -435,7 +488,113 @@
     hud.appendChild(foglio);
     hud.classList.add("pbs-nascosti");
   }
-  window.__pbsMenu = function () { apriMenu(); };
+  function nomeComandi() {
+    var c = (window.__ringDati || {})["pbs-comandi"];
+    return c === "pc" ? t.pc : c === "touch" ? t.touch : t.auto + " · " + (PC ? t.pc : t.touch);
+  }
+  // Dalla tendina del motore (sul PC i suoi due tasti in fondo portano qui: vedi «Sul PC» più sotto).
+  window.__pbsMenu = function (tipo) {
+    var r = R(); try { if (r && r.pannello()) r.pannello(false); } catch (e) { /* niente */ }
+    if (tipo === "guida") apriInstalla(); else apriMenu();
+  };
+
+  // ·· Installa sul telefono ··
+  // Android: l'APK dell'ultima release del repo (la fa .github/workflows/apk.yml), coi tre passi dell'installazione da
+  // file; e la web app, in un tocco dove Chrome lo offre. iPhone: Condividi → Aggiungi alla schermata Home. PC: tutte e
+  // due, con l'indirizzo da aprire sul telefono.
+  var REPO = "rikyroky91-commits/parry-brawl-survivor", APK = "ParryBrawlSurvivor.apk", invito = null;
+  window.addEventListener("beforeinstallprompt", function (ev) { ev.preventDefault(); invito = ev; });
+  window.addEventListener("appinstalled", function () { invito = null; });
+  var ANDROID = /Android/i.test(navigator.userAgent);
+  var INSTALLATA = (window.matchMedia && window.matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches) || window.navigator.standalone === true;
+  var CONDIVIDI = '<svg class="pbs-cond" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l4 4h-3v8h-2V7H8zM5 11h3v2H7v6h10v-6h-1v-2h3v10H5z"/></svg>';
+  function passi(lista) {
+    return '<ol class="pbs-passi">' + lista.map(function (x, i) { return '<li><span class="num">' + (i + 1) + "</span><span>" + x + "</span></li>"; }).join("") + "</ol>";
+  }
+  function apriInstalla() {
+    if (foglio) chiudiMenu();
+    var r = R();
+    pausaPrima = !!(r && r.pausa()); if (r) r.pausa(true); menuAperto = true;
+    foglio = el("div", "tocca");
+    var velo = el("div", "pbs-velo"), f = el("div", "pbs-foglio pbs-installa");
+    velo.addEventListener("click", chiudiMenu);
+    foglio.appendChild(velo); foglio.appendChild(f);
+    var html = '<h2>' + esc(t.instTitolo) + "</h2>";
+    var indirizzo = location.origin + location.pathname.replace(/[^/]*$/, "");
+    if (!IOS && !ANDROID) html += '<p class="pbs-testo">' + esc(t.instPc) + '</p><div class="pbs-indirizzo"><code>' + esc(indirizzo) + '</code><button class="pbs-tasto secondo" data-copia>' + esc(t.copia) + "</button></div>";
+    var android = '<section class="pbs-piatt"><h3>🤖 ' + esc(t.andTitolo) + '</h3><p class="pbs-testo">' + esc(t.andTesto) + "</p>" +
+      '<a class="pbs-tasto pbs-apk" data-apk href="https://github.com/' + REPO + "/releases/latest/download/" + APK + '" rel="noopener">' + esc(t.apk) + ' <small data-apk-info></small></a>' +
+      passi([t.and1, t.and2, t.and3]) +
+      (ANDROID && invito ? '<button class="pbs-tasto secondo" data-webapp>' + esc(t.webApp) + "</button>" : ANDROID ? '<p class="pbs-nota">' + t.andWeb + "</p>" : "") + "</section>";
+    var ios = '<section class="pbs-piatt"><h3>🍏 ' + esc(t.iosTitolo) + "</h3>" +
+      (IOS && INSTALLATA ? '<p class="pbs-testo">✓ ' + esc(t.iosGia) + "</p>" : passi([t.ios1, t.ios2.replace("{icona}", CONDIVIDI), t.ios3])) +
+      '<p class="pbs-nota">' + esc(t.iosNota) + "</p></section>";
+    var pc = !IOS && !ANDROID && invito && !INSTALLATA ? '<section class="pbs-piatt"><h3>🖥️ ' + esc(t.pcTitolo) + '</h3><p class="pbs-testo">' + esc(t.pcWeb) + '</p><button class="pbs-tasto secondo" data-webapp>' + esc(t.webApp) + "</button></section>" : "";
+    html += IOS ? ios + android : ANDROID ? android + ios : android + ios + pc;
+    html += '<button class="pbs-tasto pbs-chiudi" data-chiudi>' + esc(t.chiudi) + "</button>";
+    f.innerHTML = html;
+    f.querySelector("[data-chiudi]").addEventListener("click", function () { vibra("tasto"); chiudiMenu(); });
+    var copia = f.querySelector("[data-copia]");
+    if (copia) copia.addEventListener("click", function () {
+      try { navigator.clipboard.writeText(indirizzo).then(function () { copia.textContent = t.copiato; }); } catch (e) { /* niente */ }
+    });
+    var wa = f.querySelector("[data-webapp]");
+    if (wa) wa.addEventListener("click", function () {
+      if (!invito) return;
+      invito.prompt(); invito.userChoice.then(function () { invito = null; wa.remove(); }).catch(function () { /* niente */ });
+    });
+    // L'APK c'è? (l'ultima release del repo; senza, il tasto dice «in arrivo» e non porta da nessuna parte)
+    var a = f.querySelector("[data-apk]"), info = f.querySelector("[data-apk-info]");
+    fetch("https://api.github.com/repos/" + REPO + "/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
+      .then(function (r2) { if (!r2.ok) throw r2.status; return r2.json(); })
+      .then(function (rel) {
+        var file = (rel.assets || []).filter(function (x) { return x.name === APK; })[0];
+        if (!file) throw "assente";
+        info.textContent = "· " + (file.size / 1048576).toFixed(1) + " MB";
+      })
+      .catch(function () {
+        a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.classList.add("spento");
+        a.firstChild.textContent = t.apkArrivo + " ";
+      });
+    hud.appendChild(foglio);
+    hud.classList.add("pbs-nascosti");
+  }
+
+  // ·· Sul PC ··
+  // M apre e chiude il menu del sito (non mentre si scrive il nome in classifica). La tendina del motore ha in fondo due
+  // tasti pensati per l'estensione («accensione su tutti i siti», «come funziona»): qui portano al menu del sito e
+  // all'installazione sul telefono. Il tasto per spegnere le lotte, sul sito, non serve.
+  if (PC) {
+    window.addEventListener("keydown", function (ev) {
+      if (ev.code !== "KeyM" || ev.ctrlKey || ev.metaKey || ev.altKey || ev.repeat) return;
+      var dove = ev.composedPath ? ev.composedPath()[0] : ev.target;
+      if (dove && (/^(INPUT|TEXTAREA|SELECT)$/.test(dove.tagName || "") || dove.isContentEditable)) return;
+      ev.preventDefault();
+      if (foglio) chiudiMenu(); else apriMenu();
+    }, true);
+    var radice = window.__ringRadice;
+    if (radice && radice.querySelector) {
+      try {
+        var st = document.createElement("style");
+        st.textContent = ".tasto[data-gioca] { display: none !important; } .tasto[data-sito] svg { width: 18px; height: 18px; fill: currentColor; }";
+        radice.appendChild(st);
+      } catch (e) { /* niente */ }
+      var barretta = radice.querySelector(".barretta");
+      if (barretta) {
+        var bSito = document.createElement("button");
+        bSito.type = "button"; bSito.className = "tasto"; bSito.setAttribute("data-sito", "");
+        bSito.setAttribute("aria-label", t.menuPc); bSito.title = t.menuPc + " · " + t.sito;
+        bSito.innerHTML = ICONE.menu;
+        bSito.addEventListener("click", function () { var r = R(); try { if (r && r.pannello()) r.pannello(false); } catch (e) { /* niente */ } apriMenu(); });
+        barretta.appendChild(bSito);
+      }
+      var bo = radice.querySelector("[data-opzioni-estensione]"), bg = radice.querySelector("[data-guida]");
+      if (bo) bo.textContent = "☰ " + t.sito;
+      if (bg) bg.textContent = "📲 " + t.installa;
+    }
+  }
+  // La pagina del gioco aperta da sola (dall'icona, da un link): anche lei porta il sito offline.
+  if ("serviceWorker" in navigator && location.protocol === "https:") { try { navigator.serviceWorker.register("sw.js").catch(function () { /* niente */ }); } catch (e) { /* niente */ } }
 
   // ·· La taratura del ritardo audio ··
   function apriTaratura() {
