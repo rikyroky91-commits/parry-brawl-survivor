@@ -40,6 +40,8 @@
           nick: "Nick", email: "Email", password: "Password", loginCampo: "Nick o email", entra: "Entra", crea: "Crea l'account",
           esci2: "Esci dall'account", salvatoAlle: "Salvato alle", nonSalvato: "Non ancora salvato", attendi: "Un attimo…",
           contoTesto: "Con un account il tuo personaggio (crediti, allenamento, missioni, record) resta salvato e lo ritrovi su ogni dispositivo.",
+          ospite: "Gioca come ospite", ospiteNota: "Da ospite crediti, potenziamenti e record restano solo su questo dispositivo: si perdono se cancelli i dati del browser o cambi telefono.",
+          benvenuto: "Benvenuto", benvenutoTesto: "Crea un account per conservare il tuo personaggio: crediti, potenziamenti, missioni e record restano salvati e li ritrovi su ogni dispositivo.",
           pwCorta: "La password deve avere almeno 8 caratteri", nickCorto: "Il nick va da 3 a 20 caratteri", mailNo: "Controlla l'email",
           instTitolo: "Installa Parry Brawl Survivor", instPc: "Sul telefono apri questo indirizzo, poi segui i passi qui sotto:", copia: "Copia", copiato: "Copiato",
           andTitolo: "Android: tutto il telefono è il ring", andTesto: "L'app usa le tue schermate vere come arena: Home, blocco schermo, qualsiasi app.",
@@ -68,6 +70,8 @@
           nick: "Nickname", email: "Email", password: "Password", loginCampo: "Nickname or email", entra: "Log in", crea: "Create account",
           esci2: "Log out", salvatoAlle: "Saved at", nonSalvato: "Not saved yet", attendi: "One moment…",
           contoTesto: "With an account your fighter (credits, training, missions, records) stays saved and follows you to every device.",
+          ospite: "Play as guest", ospiteNota: "As a guest, credits, upgrades and records stay on this device only: they are lost if you clear browser data or switch phones.",
+          benvenuto: "Welcome", benvenutoTesto: "Create an account to keep your fighter: credits, upgrades, missions and records stay saved and follow you to every device.",
           pwCorta: "The password needs at least 8 characters", nickCorto: "The nickname must be 3 to 20 characters", mailNo: "Check the email",
           instTitolo: "Install Parry Brawl Survivor", instPc: "On your phone open this address, then follow the steps below:", copia: "Copy", copiato: "Copied",
           andTitolo: "Android: your whole phone is the ring", andTesto: "The app uses your real screens as the arena: home screen, lock screen, any app.",
@@ -531,7 +535,7 @@
   };
 
   // ·· L'account: accedi o registrati; dentro, il profilo e l'ultimo salvataggio (la parte di rete sta in ospite.js) ··
-  function apriAccount(scheda) {
+  function apriAccount(scheda, benvenuto) {
     if (foglio) chiudiMenu();
     var r = R(), A = window.__pbsAccount;
     if (!A) return;
@@ -552,15 +556,17 @@
       return;
     }
     var nuovo = scheda === "registrati";
-    f.innerHTML = "<h2>" + esc(t.account) + '</h2><p class="pbs-testo">' + esc(t.contoTesto) + "</p>" +
+    f.innerHTML = "<h2>" + esc(benvenuto ? t.benvenuto : t.account) + '</h2><p class="pbs-testo">' + esc(benvenuto ? t.benvenutoTesto : t.contoTesto) + "</p>" +
       '<div class="pbs-schede" role="tablist"><button role="tab" data-scheda="accedi">' + esc(t.accedi) + '</button><button role="tab" data-scheda="registrati">' + esc(t.registrati) + "</button></div>" +
       '<form class="pbs-modulo" novalidate>' +
       '<label data-solo="registrati">' + esc(t.nick) + '<input name="nick" autocomplete="nickname" maxlength="20" spellcheck="false"></label>' +
       '<label data-solo="registrati">' + esc(t.email) + '<input name="email" type="email" autocomplete="email" inputmode="email"></label>' +
       '<label data-solo="accedi">' + esc(t.loginCampo) + '<input name="login" autocomplete="username" spellcheck="false"></label>' +
       "<label>" + esc(t.password) + '<input name="password" type="password" autocomplete="current-password" minlength="8"></label>' +
-      '<p class="pbs-errore" aria-live="polite"></p><button class="pbs-tasto" type="submit"></button></form>';
+      '<p class="pbs-errore" aria-live="polite"></p><button class="pbs-tasto" type="submit"></button>' +
+      '<button class="pbs-tasto secondo" type="button" data-ospite>' + esc(t.ospite) + '</button><p class="pbs-nota">⚠️ ' + esc(t.ospiteNota) + "</p></form>";
     var modulo = f.querySelector("form"), errore = f.querySelector(".pbs-errore"), invia = modulo.querySelector("[type=submit]");
+    f.querySelector("[data-ospite]").addEventListener("click", function () { try { sessionStorage.setItem("pbs-ospite", "1"); } catch (e) { /* niente */ } chiudiMenu(); });
     function mostra(qual) {
       nuovo = qual === "registrati";
       f.querySelectorAll("[data-scheda]").forEach(function (b) { b.setAttribute("aria-selected", b.getAttribute("data-scheda") === qual ? "true" : "false"); });
@@ -587,8 +593,16 @@
     modulo.addEventListener("keydown", function (ev) { ev.stopPropagation(); });
     setTimeout(function () { try { (nuovo ? modulo.nick : modulo.login).focus(); } catch (e) { /* niente */ } }, 60);
   }
-  // Aperta con ?account (dalla pagina d'ingresso): il foglio dell'account subito.
+  // Il motore mette l'account nel suo menu principale e nel roster (`__ringAccount`): da lì si apre questo foglio.
+  window.__ringAccount = {
+    stato: function () { return window.__pbsAccount ? window.__pbsAccount.stato() : null; },
+    apri: function () { apriAccount(); },
+  };
+  // Aperta con ?account (dalla pagina d'ingresso): il foglio dell'account subito. Sennò, da ospite, all'apertura:
+  // «accedi, registrati o gioca come ospite», una volta per visita (Riccardo, 18/10/2026).
+  var ospiteGia = false; try { ospiteGia = sessionStorage.getItem("pbs-ospite") === "1"; } catch (e) { /* niente */ }
   if (/[?&]account\b/.test(location.search)) setTimeout(function () { apriAccount(/[?&]account=registrati\b/.test(location.search) ? "registrati" : "accedi"); }, 400);
+  else if (window.__pbsAccount && !window.__pbsAccount.stato() && !ospiteGia) setTimeout(function () { if (!foglio) apriAccount("registrati", true); }, 700);
 
   // ·· Installa sul telefono ··
   // Android: l'APK dell'ultima release del repo (la fa .github/workflows/apk.yml), coi tre passi dell'installazione da
