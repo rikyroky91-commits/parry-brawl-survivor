@@ -77,6 +77,19 @@ TESTA = """  <title>Parry Brawl Survivor</title>
   <script>
     // Si parte nel cortile di pietra (l'arena della corsa); l'1 contro 1 passa alla lava da sé (ospite.js).
     (function () { try { if (!/[?&]tipo=/.test(location.search)) history.replaceState(null, "", (location.search ? location.search + "&" : "?") + "tipo=arena"); } catch (e) {} })();
+    // Il terreno più basso, alto quanto serve ai comandi touch (18/10/2026, Riccardo: «abbassa il terreno del gioco perché
+    // prende troppo schermo; usa il livello del terreno come linea di confine tra l'ui e il gameplay»). L'arena lo chiede
+    // qui (`__ringAltezzaSuolo`, vedi arena.html nel motore) e hud.js ci mette dentro i tasti. Sul PC le misure di sempre.
+    window.__ringAltezzaSuolo = function (tipo, W, H, largo) {
+      if (window.__pbsPc === true) return 0;
+      var giu = 0;
+      try {
+        var d = document.createElement("div");
+        d.style.cssText = "position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);visibility:hidden";
+        document.documentElement.appendChild(d); giu = d.offsetHeight || 0; d.remove();
+      } catch (e) { giu = 0; }
+      return Math.round(largo ? Math.max(86, H * 0.2) : Math.max(124, H * 0.15)) + giu;
+    };
   </script>"""
 
 

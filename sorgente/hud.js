@@ -5,7 +5,11 @@
  *  - La croce per camminare è invisibile: compare dove si appoggia il pollice nella metà sinistra (fuori dai
  *    lottatori, che restano da prendere col dito) e sparisce quando si stacca. Spinta in su: vola.
  *  - Il tasto AURA, sempre lì accanto alla parata: carica l'energia; piena, diventa LIMIT BREAK.
- *  - Ogni tasto vibra come in un gioco (Android; su iPhone, dove Safari lo permette, il tocco del sistema).
+ *  - Ogni tasto vibra come in un gioco (Android: l'API Vibration; iPhone: il «tic» degli interruttori di Safari, vedi
+ *    «La vibrazione»).
+ *  - Tutti i comandi stanno sotto la linea del terreno (18/10/2026, Riccardo: «usa il livello del terreno come linea di
+ *    confine tra l'ui e il gameplay»): l'altezza del terreno la decide il sito (`__ringAltezzaSuolo`, in gioca.html) e
+ *    qui il gruppo d'azione si adatta alla fascia (vedi «La fascia del terreno»).
  *  - In basso a destra il tasto PARATA, grande sotto il pollice. Intorno un anello si stringe quando arriva un
  *    colpo parabile e tocca il bordo nell'istante del colpo: bianco, rosso se è un attacco che la parata non
  *    regge, d'oro dentro la finestra del parry, quasi bianco negli ultimi fotogrammi (parry perfetto). Fuori,
@@ -91,29 +95,28 @@
   var R = function () { return window.__ring || null; };
   var PC = !!window.__pbsPc;
   // ·· La vibrazione ··
-  // Android: l'API Vibration, con schemi diversi per tipo di tasto. iPhone non ce l'ha: da iOS 18 Safari dà il «tic»
-  // aptico del sistema quando cambia un interruttore (<input type=checkbox switch>), ma solo dentro un gesto vero, e per
-  // WebKit sul tocco il gesto è il dito che si stacca (touchend), non quello che si appoggia. Quindi su iPhone il tic
-  // arriva al rilascio del tasto, e solo per i tasti (un parry riuscito non è un gesto: lì niente).
+  // Android: l'API Vibration, con schemi diversi per tipo di tasto. iPhone non ce l'ha: Safari (da iOS 17.4) dà il «tic»
+  // aptico del sistema quando si tocca un interruttore (<input type=checkbox switch>). Prima lo si faceva scattare da
+  // codice (un clic finto su un interruttore nascosto), ma da iOS 26.5 Safari lo fa solo se l'interruttore lo tocca il
+  // dito davvero (Riccardo, 18/10/2026: «la vibrazione su Safari non funziona»). Quindi su iPhone ogni tasto ha sopra un
+  // interruttore trasparente (`aptico`): il dito tocca quello, il tocco arriva al tasto come prima e Safari fa il tic,
+  // quando il dito si stacca. Quello che non è un tocco (un parry riuscito, un colpo preso) su iPhone non vibra: non c'è
+  // modo, per una pagina web.
   var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   var APTICO = { tasto: 10, leggero: 6, mossa: 14, forte: [16, 24, 30], parry: 22, perfetto: [18, 30, 44], colpo: [28, 30, 28], no: [8, 40, 8], limit: [20, 30, 20, 30, 60] };
-  var ticInAttesa = false, ultimoTocco = 0;
-  function ticIos() {
-    try {
-      var lbl = document.createElement("label"), inp = document.createElement("input");
-      inp.type = "checkbox"; inp.setAttribute("switch", ""); lbl.setAttribute("aria-hidden", "true"); lbl.style.display = "none";
-      lbl.appendChild(inp); document.head.appendChild(lbl); lbl.click(); document.head.removeChild(lbl);
-    } catch (e) { /* niente */ }
-  }
-  if (IOS) {
-    document.addEventListener("pointerdown", function () { ultimoTocco = Date.now(); }, true);
-    document.addEventListener("touchend", function () { if (ticInAttesa) { ticInAttesa = false; ticIos(); } }, true);
-  }
   var vibra = function (p) {
     if (typeof p === "string") p = APTICO[p] || 10;
-    try { if (navigator.vibrate) { navigator.vibrate(p); return; } } catch (e) { /* niente */ }
-    if (IOS && Date.now() - ultimoTocco < 600) ticInAttesa = true;
+    try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) { /* niente */ }
   };
+  function aptico(e) {
+    if (!IOS || !e || e.querySelector("[data-aptico]")) return e;
+    var s = document.createElement("input");
+    s.type = "checkbox"; s.setAttribute("switch", ""); s.setAttribute("data-aptico", ""); s.setAttribute("aria-hidden", "true"); s.tabIndex = -1;
+    s.className = "pbs-aptico";
+    e.classList.add("con-aptico");
+    e.appendChild(s);
+    return e;
+  }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
   var ICONE = {
     pausa: '<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg>',
@@ -133,7 +136,7 @@
   // (anche qui, non solo su <html>: le arene riscrivono la classe di <html> quando cambiano, vedi __pbArena)
   if (PC) hud.classList.add("pbs-pc");
   var capsula = el("div", "pbs-capsula tocca");
-  var bPausa = el("button", "pbs-icona", ICONE.pausa); bPausa.setAttribute("aria-label", t.pausa);
+  var bPausa = el("button", "pbs-icona", '<span class="ic">' + ICONE.pausa + "</span>"); bPausa.setAttribute("aria-label", t.pausa);
   var avatar = [mkAvatar(), mkAvatar()];
   var punti = el("div", "pbs-punti", "0 – 0");
   var bMenu = el("button", "pbs-icona", ICONE.menu); bMenu.setAttribute("aria-label", t.menu);
@@ -155,6 +158,7 @@
     azioni.appendChild(a); abilita.push({ e: a, id: null });
   }
   hud.appendChild(capsula); hud.appendChild(croce); hud.appendChild(azioni);
+  [bPausa, bMenu, bAura, bParata].concat(avatar.map(function (av) { return av.e; }), abilita.map(function (a) { return a.e; })).forEach(aptico);
   // Sul PC i comandi touch non servono (li nasconde hud.css): il menu del sito è un tasto in più nella barretta del
   // motore, accanto al controller e alla tendina (vedi «Sul PC»).
   document.body.appendChild(hud);
@@ -173,6 +177,24 @@
     av.e.setAttribute("aria-label", nome || "");
   }
 
+  // ·· La fascia del terreno ··
+  // Il gruppo d'azione (abilità, aura, parata) sta tutto sotto la linea del terreno, centrato nella fascia e rimpicciolito
+  // se la fascia è bassa (telefono in orizzontale). L'altezza viene dall'arena (`__ringArena`: lava o pavimento).
+  var sonda = el("div", "");
+  sonda.style.cssText = "position:fixed;left:0;bottom:0;width:0;height:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none";
+  document.body.appendChild(sonda);
+  var GRUPPO = 104, fasciaVista = "";
+  function fascia() {
+    var a = window.__ringArena || {}, B = Math.max(a.lava || 0, a.pavimento || 0);
+    var giu = sonda.offsetHeight || 0, dentro = (B > 0 ? B : 128) - giu;
+    var k = Math.max(0.62, Math.min(1.12, (dentro - 12) / GRUPPO)), pad = Math.max(4, (dentro - GRUPPO * k) / 2);
+    var chiave = k.toFixed(3) + "|" + pad.toFixed(1);
+    if (chiave === fasciaVista) return;
+    fasciaVista = chiave;
+    hud.style.setProperty("--k", k.toFixed(3));
+    hud.style.setProperty("--pad", pad.toFixed(1) + "px");
+  }
+
   // ·· Lo stato del motore, ogni 120 ms ··
   var m = null, inPausa = false, pannello = false, menuAperto = false, avviato = false, mostra = false;
   function leggi() {
@@ -183,12 +205,14 @@
     // I comandi si tolgono quando il canvas vuole i tocchi (scelta del modo, carte, mira, classifica), con la tendina
     // o il menu aperti, in pausa e a lotte spente.
     mostra = !PC && avviato && m.acceso && !m.vuoleTocchi && !pannello && !menuAperto && !inPausa && (gioco || lotta);
+    fascia();
     hud.classList.toggle("pbs-nascosti", !mostra);
     // La capsula solo a lotta in corso (o in pausa): sopra i menu del motore coprirebbe i titoli.
     var conCapsula = !PC && avviato && m.acceso && !pannello && !m.menu && !m.scelta && (inPausa || lotta || (gioco && !m.vuoleTocchi));
     capsula.style.opacity = conCapsula ? "1" : "0";
     capsula.style.pointerEvents = conCapsula ? "auto" : "none";
-    bPausa.innerHTML = inPausa ? ICONE.gioca : ICONE.pausa;
+    var icP = inPausa ? ICONE.gioca : ICONE.pausa;
+    if (bPausa.firstChild.innerHTML !== icP) bPausa.firstChild.innerHTML = icP;
     var ls = m.lottatori || [];
     if (ls.length >= 2) {
       var A = ls[0], B = ls[1];
@@ -334,7 +358,8 @@
   bParata.addEventListener("pointerdown", function (ev) {
     ev.preventDefault();
     parataDito = ev.pointerId;
-    try { bParata.setPointerCapture(ev.pointerId); } catch (e) { /* niente */ }
+    // (su iPhone niente cattura: il clic deve arrivare all'interruttore del tic; lo stacco lo sente comunque la finestra)
+    if (!IOS) try { bParata.setPointerCapture(ev.pointerId); } catch (e) { /* niente */ }
     premuta = performance.now();
     azione("para"); vibra("tasto");
   });
@@ -343,7 +368,7 @@
     parataDito = null; premuta = 0;
     var r = R(); try { if (r && r.lascia) r.lascia("para"); } catch (e) { /* niente */ }
   }
-  bParata.addEventListener("pointerup", parataFine); bParata.addEventListener("pointercancel", parataFine);
+  window.addEventListener("pointerup", parataFine, true); window.addEventListener("pointercancel", parataFine, true);
 
   var eraRotta = false, premuta = 0, ultimoParry = 1e9, ultimoColpo = 1e9, scoppi = [], scossa = 0, dpr = 1, g = null;
   function preparaTela() {
@@ -374,7 +399,23 @@
     g.fillStyle = grad; g.beginPath(); g.arc(c, c, Rb - (premuta ? 2 : 0), 0, Math.PI * 2); g.fill();
     if (dentro) { g.globalAlpha = perfetto ? 0.55 : 0.32; g.fillStyle = "#ffd84a"; g.fill(); g.globalAlpha = 1; }
     g.lineWidth = 2; g.strokeStyle = dentro ? "#ffd84a" : tp.inGuardia ? "#8fd3ff" : "rgba(255,255,255,.28)"; g.stroke();
-    // lo scudo
+    // Col fucile-sega in mano (`tp.sega`) la parata è l'agguato: al posto dello scudo la sega, che trema accesa quando si
+    // è in agguato (vedi «L'AGGUATO DELLA SEGA» nel motore).
+    if (tp.sega) {
+      g.save(); g.translate(c + (tp.agguato ? (Math.random() - 0.5) * 2 : 0), c + 2);
+      if (tp.agguato) { g.globalAlpha = 0.35 + 0.25 * Math.sin(ora / 70); g.fillStyle = "#ff5a3a"; g.beginPath(); g.arc(0, -2, 34, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1; }
+      // la motosega disegnata (l'emoji 🪚 è una sega da falegname): corpo arancio con l'impugnatura, lama con la catena
+      var gira = tp.agguato ? (ora / 30) % 6 : 0;
+      g.rotate(-0.35); g.lineJoin = "round"; g.lineWidth = 2; g.strokeStyle = "#17171c";
+      g.fillStyle = "#c9ced8"; g.beginPath(); g.moveTo(-2, -6); g.lineTo(26, -6); g.quadraticCurveTo(33, 0, 26, 6); g.lineTo(-2, 6); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = "#17171c"; g.beginPath();
+      for (var u = -2 + gira; u < 26; u += 6) { g.moveTo(u, 6); g.lineTo(u + 2.5, 9.5); g.lineTo(u + 5, 6); g.moveTo(u, -6); g.lineTo(u + 2.5, -9.5); g.lineTo(u + 5, -6); }
+      g.fill();
+      g.fillStyle = "#ff8a1a"; g.beginPath(); g.moveTo(-26, -11); g.lineTo(0, -11); g.lineTo(2, 11); g.lineTo(-24, 11); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = "#2b2f3a"; g.beginPath(); g.moveTo(-22, -11); g.quadraticCurveTo(-12, -24, -2, -11); g.lineTo(-7, -11); g.quadraticCurveTo(-12, -18, -17, -11); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = "#ffd84a"; g.fillRect(-18, -3, 12, 4);
+      g.restore();
+    } else {
     g.save(); g.translate(c, c + 2); var s = premuta ? 0.93 : 1; g.scale(s, s);
     g.beginPath(); g.moveTo(0, -24); g.bezierCurveTo(10, -18, 18, -18, 21, -19); g.bezierCurveTo(21, 2, 14, 16, 0, 24);
     g.bezierCurveTo(-14, 16, -21, 2, -21, -19); g.bezierCurveTo(-18, -18, -10, -18, 0, -24); g.closePath();
@@ -386,6 +427,7 @@
     for (var q2 = 0; q2 < 8; q2++) { var an2 = q2 / 8 * Math.PI * 2, l2 = q2 % 2 ? 4.5 : 8; g.moveTo(2, -1); g.lineTo(2 + Math.cos(an2) * l2, -1 + Math.sin(an2) * l2); }
     g.strokeStyle = dentro || tp.rotta ? "#ffffff" : "#d99a00"; g.lineWidth = 1.8; g.stroke();
     g.restore();
+    }
     // la guardia: un arco sottile intorno, che si consuma
     var k = Math.max(0, Math.min(1, tp.guardia));
     g.lineWidth = 3; g.lineCap = "round";
@@ -394,7 +436,7 @@
     g.beginPath(); g.arc(c, c, Rb - 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); g.stroke();
     // l'anello del tempo: si stringe fino al bordo del tasto nell'istante del colpo
     if (fot !== null) {
-      var q = Math.max(0, Math.min(1, fot / 36)), r = Rb + 9 + q * 34;
+      var q = Math.max(0, Math.min(1, fot / 36)), r = Rb + 9 + q * 24;
       var colore = perfetto ? "#fff6c4" : dentro ? "#ffd84a" : tp.rossa ? "#ff3b30" : "#ffffff";
       g.globalAlpha = Math.min(1, 0.35 + (1 - q) * 0.75);
       if (dentro || tp.rossa) { g.shadowColor = colore; g.shadowBlur = perfetto ? 22 : 12; }
@@ -511,7 +553,7 @@
     righe.forEach(function (q) {
       var b = el("button", "pbs-riga", '<span class="ico">' + q[0] + '</span><span class="nome">' + esc(q[1]) + (q[2] ? "<small>" + esc(q[2]) + "</small>" : "") + '</span><span class="val">' + esc(q[3] || "") + "</span>");
       b.addEventListener("click", function (ev) { vibra("tasto"); q[4].call(this, ev); });
-      f.appendChild(b);
+      f.appendChild(aptico(b));
     });
     hud.appendChild(foglio);
     hud.classList.add("pbs-nascosti");
@@ -719,7 +761,7 @@
     box.innerHTML = '<div class="scheda"><h2>' + esc(t.taraTitolo) + "</h2><p>" + esc(t.taraTesto) + '</p><button class="pbs-bersaglio">0</button><div class="esito"></div>' +
       '<button class="pbs-tasto" data-fatto>' + esc(t.fatto) + '</button><button class="pbs-tasto secondo" data-rifai>' + esc(t.rifai) + "</button></div>";
     v.appendChild(velo); v.appendChild(box); hud.appendChild(v);
-    var bers = box.querySelector(".pbs-bersaglio"), esito = box.querySelector(".esito");
+    var bers = aptico(box.querySelector(".pbs-bersaglio")), esito = box.querySelector(".esito");
     function parti() { try { r.calibra(true); } catch (e) { /* niente */ } bers.textContent = "0"; esito.textContent = ""; }
     parti();
     bers.addEventListener("pointerdown", function (ev) {
@@ -756,6 +798,8 @@
     }
     tieniAcceso();
   }, true);
+  // (l'arena si è costruita prima di sapere se si è sul PC: lì il terreno torna alle misure di sempre)
+  if (PC) try { window.dispatchEvent(new Event("resize")); } catch (e) { /* niente */ }
   setInterval(leggi, 120);
   leggi();
 })();

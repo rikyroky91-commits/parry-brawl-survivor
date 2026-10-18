@@ -50,10 +50,15 @@
 }
 .pbs-croce .su { position: absolute; left: 50%; top: -22px; margin-left: -8px; width: 16px; height: 16px; opacity: .55; }
 
-/* ·· Il gruppo d'azione: la parata grande, le abilità ad arco ·· */
-.pbs-azioni { position: absolute; right: calc(var(--dx) + 14px); bottom: calc(var(--giu) + 16px); width: 220px; height: 214px; transition: opacity .25s; }
-.pbs-parata { position: absolute; right: 8px; bottom: 8px; width: 112px; height: 112px; border-radius: 50%; }
-.pbs-parata canvas { position: absolute; left: 50%; top: 50%; width: 200px; height: 200px; margin: -100px 0 0 -100px; pointer-events: none; }
+/* ·· Il gruppo d'azione, tutto dentro la fascia del terreno (18/10/2026) ··
+   Da destra: la parata grande, l'aura, le quattro abilità in un quadrato 2×2. Nessun tasto sopra la linea del terreno:
+   hud.js mette in --k quanto rimpicciolire il gruppo (alto 104 px) per la fascia e in --pad il margine sotto. */
+.pbs-azioni {
+  position: absolute; right: calc(var(--dx) + 10px); bottom: calc(var(--giu) + var(--pad, 12px)); width: 290px; height: 104px;
+  transform: scale(var(--k, 1)); transform-origin: right bottom; transition: opacity .25s;
+}
+.pbs-parata { position: absolute; right: 0; bottom: 0; width: 104px; height: 104px; border-radius: 50%; }
+.pbs-parata canvas { position: absolute; left: 50%; top: 50%; width: 186px; height: 186px; margin: -93px 0 0 -93px; pointer-events: none; }
 .pbs-parata .scritta {
   position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, 0); white-space: nowrap; pointer-events: none;
   font-weight: 900; font-size: 15px; letter-spacing: .04em; color: var(--oro); text-shadow: 0 2px 0 #17171c, 0 0 14px rgba(255, 216, 74, .6);
@@ -64,34 +69,33 @@
 .pbs-parata .scritta.rossa { color: #ff8a80; text-shadow: 0 2px 0 #17171c; }
 @keyframes pbs-scritta { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.7); } 15% { opacity: 1; transform: translate(-50%, -6px) scale(1.12); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -26px) scale(1); } }
 .pbs-catena {
-  position: absolute; right: 4px; top: 18px; min-width: 30px; height: 24px; padding: 0 7px; border-radius: 12px;
+  position: absolute; right: 0; top: 0; min-width: 30px; height: 24px; padding: 0 7px; border-radius: 12px;
   display: grid; place-items: center; font-weight: 900; font-size: 13px; color: #17171c; background: var(--oro);
   box-shadow: 0 0 14px rgba(255, 216, 74, .55); transition: transform .15s;
 }
 .pbs-abilita {
-  position: absolute; width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center;
+  position: absolute; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
   background: conic-gradient(var(--colore, var(--oro)) calc(var(--k, 1) * 360deg), rgba(255, 255, 255, .12) 0);
   transition: transform .1s, filter .25s, opacity .25s;
 }
 .pbs-abilita::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: rgba(14, 12, 22, .82); }
-.pbs-abilita span { position: relative; font-size: 24px; line-height: 1; }
+.pbs-abilita span { position: relative; font-size: 22px; line-height: 1; }
 .pbs-abilita.scarica { filter: grayscale(1) brightness(.75); }
 .pbs-abilita.pronta { box-shadow: 0 0 0 1px rgba(255, 255, 255, .25), 0 0 14px color-mix(in srgb, var(--colore, #ffd84a) 55%, transparent); }
 .pbs-abilita:active { transform: scale(.9); }
 .pbs-abilita.no { animation: pbs-no .25s; }
 @keyframes pbs-no { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-/* L'arco intorno alla parata (centro a 64 px dal bordo destro e da quello basso, raggio 118): AURA a 180°, poi le quattro
-   a 150°, 130°, 110° e 75°, così nessuna tocca la vicina. */
-.pbs-abilita[data-posto="0"] { right: 139px; bottom: 100px; }
-.pbs-abilita[data-posto="1"] { right: 113px; bottom: 127px; }
-.pbs-abilita[data-posto="2"] { right: 77px; bottom: 148px; }
-.pbs-abilita[data-posto="3"] { right: 7px; bottom: 151px; }
+/* Il quadrato delle abilità a sinistra dell'aura: la prima (nella corsa il colpo finale) in basso vicino al pollice. */
+.pbs-abilita[data-posto="0"] { right: 182px; bottom: 0; }
+.pbs-abilita[data-posto="1"] { right: 182px; bottom: 56px; }
+.pbs-abilita[data-posto="2"] { right: 238px; bottom: 0; }
+.pbs-abilita[data-posto="3"] { right: 238px; bottom: 56px; }
 .pbs-aura {
-  position: absolute; right: 150px; bottom: 32px; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+  position: absolute; right: 114px; bottom: 23px; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center;
   background: conic-gradient(var(--colore, #56e1ff) calc(var(--k, 0) * 360deg), rgba(255, 255, 255, .12) 0); transition: transform .1s, filter .25s;
 }
 .pbs-aura::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: radial-gradient(circle at 50% 70%, rgba(86, 225, 255, .25), rgba(14, 12, 22, .9) 70%); }
-.pbs-aura .nome { position: relative; font-weight: 900; font-size: 12px; letter-spacing: .08em; }
+.pbs-aura .nome { position: relative; font-weight: 900; font-size: 11px; letter-spacing: .07em; }
 .pbs-aura:active { transform: scale(.9); }
 .pbs-aura.spenta { filter: grayscale(1) brightness(.6); }
 .pbs-aura.no { animation: pbs-no .25s; }
@@ -168,10 +172,16 @@
 .pbs-indirizzo .pbs-tasto { min-height: 36px; padding: 0 14px; margin: 0; }
 .pbs-chiudi { display: flex; width: calc(100% - 8px); margin-top: 14px; }
 
-/* Telefono in orizzontale: tutto un po' più compatto. */
-@media (max-height: 460px) {
-  .pbs-azioni { transform: scale(.86); transform-origin: right bottom; }
+/* (in orizzontale il gruppo lo rimpicciolisce hud.js, secondo la fascia del terreno) */
+
+/* ·· iPhone: l'interruttore trasparente sopra ogni tasto, per il «tic» di Safari (vedi «La vibrazione» in hud.js) ·· */
+#pbs-hud .con-aptico { position: relative; }
+#pbs-hud .pbs-parata.con-aptico, #pbs-hud .pbs-aura.con-aptico, #pbs-hud .pbs-abilita.con-aptico { position: absolute; }
+.pbs-aptico {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; opacity: 0; z-index: 3;
+  clip-path: inset(0 round 999px); -webkit-tap-highlight-color: transparent; touch-action: none; cursor: pointer;
 }
+.pbs-riga .pbs-aptico, .pbs-tasto .pbs-aptico { clip-path: inset(0 round 12px); }
 
 /* ---------- L'account (18/10/2026): nick, email, password ---------- */
 .pbs-schede { display: flex; gap: 6px; margin: 0 0 12px; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, .06); }

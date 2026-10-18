@@ -65,4 +65,10 @@ cd dist && python3 -m http.server 8000               # http://localhost:8000
 - La classifica globale passa dal server di Mobile Update Tracker (`/api/corsa`): se quel sito cambia dominio,
   va cambiato `ospite.js`.
 - Su iPhone nessuna app può disegnare sopra la Home o le altre app: lì il gioco è sempre a schermo intero.
+- Sul telefono il terreno dell'arena è alto quanto serve ai comandi (`__ringAltezzaSuolo` in `costruisci.py`) e tutti i
+  tasti stanno sotto la sua linea: sopra c'è solo il gioco (e la capsula in alto).
+- Vibrazione su iPhone: Safari non ha l'API Vibration. Ogni tasto ha sopra un interruttore trasparente
+  (`<input type=checkbox switch>`): il dito lo tocca davvero e Safari fa il suo «tic» (da iOS 17.4). Il vecchio trucco
+  del clic finto da codice non funziona più da iOS 26.5. Parry riusciti e colpi presi su iPhone non vibrano: non sono
+  tocchi, e una pagina web non ha altro modo.
 - Il font è Archivo (SIL Open Font License, `sorgente/font/OFL.txt`), servito dal sito.
