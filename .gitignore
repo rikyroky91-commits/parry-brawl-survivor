@@ -2,3 +2,19 @@ dist/
 __pycache__/
 *.jks
 *.keystore
+
+# File temporanei, script di test e verifiche locali
+test_*.py
+check_*.py
+debug_*.py
+apply_*.py
+snap_*.py
+trace_*.py
+find_*.py
+inspect_*.py
+capture_*.py
+verify_*.py
+aggiorna_ring.py
+*.png
+motore_repo/
+

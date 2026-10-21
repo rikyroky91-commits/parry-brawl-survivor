@@ -95,19 +95,91 @@
 
   var R = function () { return window.__ring || null; };
   var PC = !!window.__pbsPc;
-  // ·· La vibrazione ··
-  // Android: l'API Vibration, con schemi diversi per tipo di tasto. iPhone non ce l'ha: Safari (da iOS 17.4) dà il «tic»
-  // aptico del sistema quando si tocca un interruttore (<input type=checkbox switch>). Prima lo si faceva scattare da
-  // codice (un clic finto su un interruttore nascosto), ma da iOS 26.5 Safari lo fa solo se l'interruttore lo tocca il
-  // dito davvero (Riccardo, 18/10/2026: «la vibrazione su Safari non funziona»). Quindi su iPhone ogni tasto ha sopra un
-  // interruttore trasparente (`aptico`): il dito tocca quello, il tocco arriva al tasto come prima e Safari fa il tic,
-  // quando il dito si stacca. Quello che non è un tocco (un parry riuscito, un colpo preso) su iPhone non vibra: non c'è
-  // modo, per una pagina web.
+  // ·· La vibrazione aptica (Android & iOS) ··
+  // Android: API Vibration con sequenze ricche e dettagliate per ogni evento di gioco.
+  // iOS (Safari): combinazione del trigger di switch fisico (<input switch>) su tocco attivo
+  // e di sintesi tattile sub-bassi (48 Hz micro-impulso a bassa latenza su Web Audio API) che fa vibrare
+  // fisicamente il Taptic Engine / telaio di iPhone per colpi, parry e colpi subiti.
   var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  var APTICO = { tasto: 10, leggero: 6, mossa: 14, forte: [16, 24, 30], parry: 22, perfetto: [18, 30, 44], colpo: [28, 30, 28], no: [8, 40, 8], limit: [20, 30, 20, 30, 60] };
-  var vibra = function (p) {
-    if (typeof p === "string") p = APTICO[p] || 10;
-    try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) { /* niente */ }
+  var APTICO = {
+    tasto: 10,
+    leggero: 8,
+    mossa: [14, 18, 14],
+    forte: [22, 28, 36],
+    parry: [18, 28, 22],
+    perfetto: [24, 20, 36, 20, 50],
+    colpo: [40, 30, 60],
+    no: [12, 35, 12],
+    limit: [20, 25, 20, 25, 50, 25, 80]
+  };
+
+  var apticoAudioCtx = null;
+  function getApticoAudioCtx() {
+    if (!apticoAudioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) {
+        try { apticoAudioCtx = new AC(); } catch (e) { apticoAudioCtx = null; }
+      }
+    }
+    if (apticoAudioCtx && apticoAudioCtx.state === "suspended") {
+      try { apticoAudioCtx.resume(); } catch (e) {}
+    }
+    return apticoAudioCtx;
+  }
+
+  function vibraIosAcustico(intensita, durataMs) {
+    if (!IOS) return;
+    try {
+      var ctx = getApticoAudioCtx();
+      if (!ctx) return;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      var ora = ctx.currentTime;
+      var dur = Math.max(0.018, (durataMs || 26) / 1000);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(48, ora);
+      gain.gain.setValueAtTime(0.001, ora);
+      gain.gain.linearRampToValueAtTime(Math.min(1, intensita || 0.8), ora + 0.003);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ora + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ora);
+      osc.stop(ora + dur + 0.02);
+    } catch (e) { /* niente */ }
+  }
+
+  function ticSwitchAttivo() {
+    if (!IOS) return;
+    try {
+      var sw = bParata && bParata.querySelector("[data-aptico]");
+      if (sw) {
+        sw.checked = !sw.checked;
+        sw.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    } catch (e) { /* niente */ }
+  }
+
+  var vibra = function (p, info) {
+    var schema = typeof p === "string" ? APTICO[p] || 10 : p;
+    try {
+      if (navigator.vibrate) navigator.vibrate(schema);
+    } catch (e) { /* niente */ }
+    if (IOS) {
+      ticSwitchAttivo();
+      var dur = Array.isArray(schema) ? schema.reduce(function (a, b) { return a + b; }, 0) : schema;
+      var forte = p === "perfetto" || p === "parry" || p === "colpo" || p === "forte" || p === "limit";
+      vibraIosAcustico(forte ? 0.95 : 0.65, Math.min(65, Math.max(22, dur)));
+    }
+  };
+
+  // Hook globale dal motore (chiamato direttamente da ring.js su eventi di gameplay)
+  window.__pbAptico = function (evento, dettagli) {
+    if (evento === "parry-perfetto") vibra("perfetto", dettagli);
+    else if (evento === "parry") vibra("parry", dettagli);
+    else if (evento === "danno" || evento === "ko") vibra("colpo", dettagli);
+    else if (evento === "guardia-rotta") vibra("no", dettagli);
+    else if (evento === "contro") vibra("mossa", dettagli);
+    else if (evento === "forte" || evento === "colpo-finale") vibra("forte", dettagli);
   };
   function aptico(e) {
     if (!IOS || !e || e.querySelector("[data-aptico]")) return e;
@@ -208,8 +280,9 @@
     mostra = !PC && avviato && m.acceso && !m.vuoleTocchi && !pannello && !menuAperto && !inPausa && (gioco || lotta);
     fascia();
     hud.classList.toggle("pbs-nascosti", !mostra);
-    // La capsula solo a lotta in corso (o in pausa): sopra i menu del motore coprirebbe i titoli.
-    var conCapsula = !PC && avviato && m.acceso && !pannello && !m.menu && !m.scelta && (inPausa || lotta || (gioco && !m.vuoleTocchi));
+    // La capsula solo a lotta in corso (o in pausa): sopra i menu del motore coprirebbe i titoli, e in Brawl viene sostituita dall'HUD Brawl a 4 lottatori
+    var rEngine = R();
+    var conCapsula = !PC && avviato && m.acceso && !pannello && !m.menu && !m.scelta && !m.brawl && !(rEngine && rEngine.brawl && rEngine.brawl()) && (inPausa || lotta || (gioco && !m.vuoleTocchi));
     capsula.style.opacity = conCapsula ? "1" : "0";
     capsula.style.pointerEvents = conCapsula ? "auto" : "none";
     var icP = inPausa ? ICONE.gioca : ICONE.pausa;
@@ -742,11 +815,9 @@
     stato: function () { return window.__pbsAccount ? window.__pbsAccount.stato() : null; },
     apri: function () { apriAccount(); },
   };
-  // Aperta con ?account (dalla pagina d'ingresso): il foglio dell'account subito. Sennò, da ospite, all'apertura:
-  // «accedi, registrati o gioca come ospite», una volta per visita (Riccardo, 18/10/2026).
-  var ospiteGia = false; try { ospiteGia = sessionStorage.getItem("pbs-ospite") === "1"; } catch (e) { /* niente */ }
+  // Aperta con ?account (dalla pagina d'ingresso): il foglio dell'account subito. Altrimenti l'utente gioca come ospite libero.
+  try { if (!sessionStorage.getItem("pbs-ospite")) sessionStorage.setItem("pbs-ospite", "1"); } catch (e) { /* niente */ }
   if (/[?&]account\b/.test(location.search)) setTimeout(function () { apriAccount(/[?&]account=registrati\b/.test(location.search) ? "registrati" : "accedi"); }, 400);
-  else if (window.__pbsAccount && !window.__pbsAccount.stato() && !ospiteGia) setTimeout(function () { if (!foglio) apriAccount("registrati", true); }, 700);
 
   // ·· Installa sul telefono ··
   // Android: l'APK dell'ultima release del repo (la fa .github/workflows/apk.yml), coi tre passi dell'installazione da

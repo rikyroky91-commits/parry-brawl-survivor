@@ -10,13 +10,16 @@
   var dati = {};
   try { dati = JSON.parse(window.localStorage.getItem(CHIAVE) || "{}") || {}; } catch (e) { dati = {}; }
 
-  // Di serie, sul sito: audio acceso (la musica è metà del gioco), lingua del telefono, lotte accese.
+  // Di serie, sul sito: audio acceso (la musica è metà del gioco), lingua del telefono, lotte accese, stile guerrieri (Dragon Ball Z).
   var LINGUE = ["it", "en", "es", "fr", "de"];
   if (!dati["pb-lingua"]) {
     var l = String((navigator.languages && navigator.languages[0]) || navigator.language || "en").slice(0, 2).toLowerCase();
     dati["pb-lingua"] = LINGUE.indexOf(l) >= 0 ? l : "en";
   }
   if (!dati["mut-ring-audio"]) dati["mut-ring-audio"] = "on";
+  if (!dati["mut-ring-stile"]) dati["mut-ring-stile"] = "guerrieri";
+  if (!dati["mut-ring-anime"]) dati["mut-ring-anime"] = "on";
+  try { if (!sessionStorage.getItem("pbs-ospite")) sessionStorage.setItem("pbs-ospite", "1"); } catch (e) {}
 
   function salva(oggetto) {
     var cambiato = false;
@@ -29,11 +32,11 @@
   window.__ringNome = "Parry Brawl Survivor";
   window.__ringMotto = "Para al momento giusto. A tempo di musica.";
   window.__ringMusicaBase = "sempre";
-  // I due modi del sito (18/10/2026, Riccardo): la corsa nel cortile di pietra, largo e con le lastre che si rompono;
-  // al posto del combattimento libero l'1 contro 1 sulla lava, dove comandi il tuo lottatore dal primo istante.
+  // I due modi del sito (Brawl Tutti contro Tutti stile Super Smash Bros):
+  // 4 combattenti nell'arena in una partita a tempo di 3 minuti, vince chi muore meno volte!
   window.__ringModoLibero = {
-    nome: "1 contro 1", icona: "\u{1F30B}", unoControUno: true,
-    testo: "Tu contro un lottatore, sulla piattaforma sopra la lava. Para i suoi colpi, buttalo giù, non cadere.",
+    nome: "Brawl", icona: "⚔️", unoControUno: false, brawl: true,
+    testo: "Tutti contro tutti in una sfida a tempo di 3 minuti (Super Smash Bros style). Scegli il tuo combattente dal roster: vince chi muore meno volte!",
   };
   // Aperta senza ?tipo= (l'anteprima, un link): il cortile di pietra, che è lo sfondo del menu.
   try { if (!/[?&]tipo=/.test(location.search) && window.__pbArena) window.__pbArena("arena"); } catch (e) { /* resta quella che c'è */ }
@@ -42,6 +45,7 @@
   };
   window.__ringDati = dati;
   window.__lingueSoloDizionario = true;
+  window.__pbSceltaModo = false;
 
   // ·· PC o telefono (18/10/2026, Riccardo: «riconosca se sei su pc o mobile e quando sei su pc i comandi devono essere
   // come quelli della pagina web, cioè con i comandi radiali») ··
@@ -61,9 +65,8 @@
   }
   window.__pbsPc = comandiPc();
   document.documentElement.classList.add(window.__pbsPc ? "pbs-pc" : "pbs-touch");
-  // Le frecce per guidare il lottatore: facoltative e spente di serie (Riccardo: «deve essere una cosa opzionale, il
-  // personaggio si muove da solo»). Accese: ← → camminano, ↑ decolla, ↓ atterra; lasciate, torna a fare da sé.
-  window.__pbsFrecce = dati["pbs-frecce"] === "on";
+  // Le frecce per guidare il lottatore con priorità sull'automa (lasciate le frecce torna istantaneamente automatico).
+  window.__pbsFrecce = dati["pbs-frecce"] !== "off";
 
   // Telefono: vita, punteggio, abilità, parata li disegna il sito (hud.js), non il canvas. PC: li disegna il motore.
   window.__ringHudEsterno = !window.__pbsPc;
@@ -124,48 +127,25 @@
     window.addEventListener(tipo, function (ev) { if (typeof window.__pbsTocco === "function") window.__pbsTocco(ev); }, { capture: true, passive: false });
   });
 
-  // ·· Le frecce (vedi `__pbsFrecce`) ··
-  // Registrato prima del motore, che ascolta la tastiera anche lui in fase di cattura: in lotta le frecce le prende il
-  // sito. Spente non fanno niente (il lottatore va da sé); accese ← → camminano (anche tenute premute) e ↑ ↓ decollano
-  // e atterrano, con la tastiera del motore accesa o spenta. Nei menu, nella scelta delle carte, nella mira e mentre si
-  // scrive il nome in classifica restano del motore, come sempre.
-  var FRECCE = { ArrowLeft: "sinistra", ArrowRight: "destra", ArrowUp: "su", ArrowDown: "giu" };
-  function inLotta(r) {
-    var m;
-    try { m = r.mosse(); if (r.pausa() || r.pannello()) return null; } catch (e) { return null; }
-    if (!m.acceso || m.menu || m.scelta || m.vuoleTocchi) return null;
-    if (m.corsa && !(m.corsaHud && m.corsaHud.fase === "lotta")) return null;
-    return m;
-  }
+  // ·· Le frecce direzionali ··
+  // Il controllo fisico continuo e prioritario dei direzionali è gestito nativamente dal motore (ring.js).
+  // Lasciamo che gli eventi fluiscano direttamente a ring.js senza bloccarli né intercettarli.
   window.addEventListener("keydown", function (ev) {
     // Col menu del sito aperto la tastiera è sua (Esc o M lo chiudono): sotto, il motore non deve muovere i suoi menu.
     if (typeof window.__pbsFoglioTasto === "function" && window.__pbsFoglioTasto(ev)) { ev.stopImmediatePropagation(); return; }
-    var id = FRECCE[ev.code];
-    if (!id || ev.ctrlKey || ev.metaKey || ev.altKey) return;
-    var dove = ev.composedPath ? ev.composedPath()[0] : ev.target;
-    if (dove && (/^(INPUT|TEXTAREA|SELECT)$/.test(dove.tagName || "") || dove.isContentEditable)) return;
-    var r = window.__ring, m = r && r.mosse ? inLotta(r) : null;
-    if (!m) return;
-    ev.preventDefault(); ev.stopImmediatePropagation();
-    if (!window.__pbsFrecce) return;
-    try {
-      if (id === "sinistra" || id === "destra") {
-        // Tenuta premuta: un passo subito e poi uno ogni 150 ms finché si lascia, senza aspettare la ripetizione del
-        // sistema (che parte dopo mezzo secondo e cambia da un PC all'altro).
-        if (ev.repeat || tenuta[id]) return;
-        r.premi(id);
-        tenuta[id] = setInterval(function () { try { if (inLotta(r) && window.__pbsFrecce) r.premi(id); } catch (e) { /* niente */ } }, 150);
-        return;
-      }
-      if (ev.repeat) return;
-      var chi = m.corsaHud ? m.corsaHud.chi : m.chi, io = (m.lottatori || []).filter(function (l) { return l.tipo === chi; })[0];
-      if ((id === "su") !== !!(io && io.vola)) r.premi("vola");
-    } catch (e) { /* niente */ }
   }, true);
-  var tenuta = {};
-  function lascia(id) { if (tenuta[id]) { clearInterval(tenuta[id]); tenuta[id] = 0; } }
-  window.addEventListener("keyup", function (ev) { var id = FRECCE[ev.code]; if (id) lascia(id); }, true);
-  window.addEventListener("blur", function () { lascia("sinistra"); lascia("destra"); });
+
+  var tastiPremuti = {};
+  window.addEventListener("blur", function () {
+    tastiPremuti = {};
+    try {
+      var r = window.__ring;
+      if (r && typeof r.lascia === "function") {
+        r.lascia("sinistra");
+        r.lascia("destra");
+      }
+    } catch (e) {}
+  });
 
   // ·· L'account (18/10/2026, Riccardo: «una pagina di log semplice, nick, mail e password, così da poter conservare il
   // proprio personaggio nel proprio account») ··
