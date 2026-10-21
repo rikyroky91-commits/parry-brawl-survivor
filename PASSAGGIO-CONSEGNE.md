@@ -62,6 +62,7 @@ Il progetto si compone di due repository coordinati:
 ### 🕹️ 5. Correzione Comandi Direzionali & Ripresa Rotta Automatica
 - **Problema iniziale**: i tasti freccia non rispondevano, il personaggio non si muoveva e dopo il comando manuale non riprendeva la caccia ai nemici.
 - **Interventi realizzati**:
+  - **Menu Principale e Scelta Modalità**: garantita la corretta apertura del menu di benvenuto e selezione all'avvio (`Corsa Infinita`, `Brawl`, `Account`), permettendo di scegliere la modalità o il personaggio prima di entrare nell'arena.
   - **Risoluzione blocco input**: in `sorgente/hud.js` è stato rimosso il popup automatico di registrazione account che a 700ms dal caricamento metteva il motore in pausa (`r.pausa(true)`) e focalizzava un `<input>`, bloccando l'elaborazione dei tasti.
   - **Fix eccezione JavaScript**: corretto in `sorgente/ospite.js` l'errore `ReferenceError: tastiPremuti is not defined` su perdita di focus della finestra (`window.blur`).
   - **Priorità frecce e movimento manuale**: in `ring.js`, `ArrowLeft` e `ArrowRight` muovono istantaneamente il lottatore del giocatore; `ArrowUp` esegue il salto/volo.
