@@ -45,7 +45,6 @@
   };
   window.__ringDati = dati;
   window.__lingueSoloDizionario = true;
-  window.__pbSceltaModo = false;
 
   // ·· PC o telefono (18/10/2026, Riccardo: «riconosca se sei su pc o mobile e quando sei su pc i comandi devono essere
   // come quelli della pagina web, cioè con i comandi radiali») ··
