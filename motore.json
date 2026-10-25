@@ -1,5 +1,5 @@
 {
   "repo": "https://github.com/rikyroky91-commits/android-updater",
-  "commit": "2aa27f746b18fb3093075237e1c7833fdc3de112",
+  "commit": "65e18a0fd30e0eca13a72eb149e49ee45e42160b",
   "nota": "Il motore del gioco (ring.js, lingue.js e le arene) vive in android-updater. Qui se ne prende un commit preciso: per aggiornare il gioco si cambia questo commit."
 }

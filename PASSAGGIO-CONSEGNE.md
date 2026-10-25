@@ -23,9 +23,14 @@ Il progetto si compone di due repository coordinati:
    - Repository: `https://github.com/rikyroky91-commits/android-updater`
    - Ramo: `main` (il ramo `claude/parry-brawl-web` è stato unito a `main` il 25/10/2026)
    - Contiene il motore fisico e di rendering del ring (`web/static/ring.js`), le traduzioni (`lingue.js`), e la logica di combattimento condivisa tra sito, app Android ed estensione Chrome.
-   - Commit attuale integrato: `2aa27f746b18fb3093075237e1c7833fdc3de112` (`main` di android-updater, 25/10/2026).
+   - Commit attuale integrato: `65e18a0fd30e0eca13a72eb149e49ee45e42160b` (`main` di android-updater, 25/10/2026).
 
 ---
+
+## 2. Aggiornamento del 25 Ottobre 2026, seconda parte (motore `65e18a0`)
+
+- **Kriòs e Vespro** nel roster del Brawl (dieci lottatori): il tiranno galattico che diventa Kriòs aureo (raggio dal dito, disco della morte, Supernova, la presa che fa esplodere) e il bio-guerriero che diventa il gigantesco Vespro massimo (onda perfetta, lampo solare, barriera perfetta, autodistruzione). Ricordano Freezer e Cell, coi nomi nostri.
+- Nel Brawl le mosse speciali dei super guerrieri e dei maghi ora partono (prima l'IA non le usava mai); chi si trasforma non viene interrotto.
 
 ## 2. Aggiornamento del 25 Ottobre 2026 (motore `2aa27f7`)
 
