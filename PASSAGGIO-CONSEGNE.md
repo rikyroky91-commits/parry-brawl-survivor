@@ -1,7 +1,7 @@
 # Passaggio di Consegne: Parry Brawl Survivor
 
 Documento vivo di riferimento per il repository **Parry Brawl Survivor** (`rikyroky91-commits/parry-brawl-survivor`).  
-Ultimo aggiornamento: **21/10/2026**, ramo `main`.  
+Ultimo aggiornamento: **25/10/2026**, ramo `main`.  
 Proprietario e referente unico: **Riccardo** (`rikyroky91-commits`).
 
 ---
@@ -21,13 +21,23 @@ Il progetto si compone di due repository coordinati:
 
 2. **`android-updater` (repository del motore di gioco)**:
    - Repository: `https://github.com/rikyroky91-commits/android-updater`
-   - Ramo web: `claude/parry-brawl-web`
+   - Ramo: `main` (il ramo `claude/parry-brawl-web` è stato unito a `main` il 25/10/2026)
    - Contiene il motore fisico e di rendering del ring (`web/static/ring.js`), le traduzioni (`lingue.js`), e la logica di combattimento condivisa tra sito, app Android ed estensione Chrome.
-   - Commit attuale integrato: `b35ad45736694c0622afac600129feffe14cedca`.
+   - Commit attuale integrato: `2aa27f746b18fb3093075237e1c7833fdc3de112` (`main` di android-updater, 25/10/2026).
 
 ---
 
-## 2. Sintesi delle Modifiche Effettuate (21 Ottobre 2026)
+## 2. Aggiornamento del 25 Ottobre 2026 (motore `2aa27f7`)
+
+Solo `motore.json` cambia in questo repository: il resto arriva dal motore. Il dettaglio è in `PASSAGGIO-CONSEGNE.md` di android-updater (registro, 24 e 25/10).
+
+- **Revisione del motore del 21/10**: corretti il crash a ogni teletrasporto, la raffica di pugni del trasformato, le frecce prese anche a gioco spento, il colpo finale annullato, hitbox e impatto del parry; tolti dai testi a schermo nomi di marchi altrui (il «Saibaman» è il **Germoglio esplosivo**, chiave `saiba` invariata).
+- **Corsa infinita, cinque biomi**: cortile, palude, dune, ghiacci, bocca del vulcano, ognuno col suo capo e un attacco speciale annunciato da un cerchio. Battuto il capo si apre uno **squarcio**: il personaggio vola su e si passa al bioma dopo; dopo il quinto si ricomincia coi nemici più forti. Sul sito l'arena (`gioca.html`, cioè `arena.html` del motore) si ricolora per bioma tramite `window.__ringBioma`, che definisce lei.
+- **Feedback dei colpi**: numeri del danno, anelli d'impatto, fermo sui colpi forti.
+- **Brawl alla Smash**: percentuale al posto della vita, spinta che cresce, K.O. nell'abisso o contro i bordi, piattaforme che crollano, palco che cambia forma ogni 40 s. Il palco è del motore anche sopra l'arena del sito. `ospite.js` resta com'è: `__ringModoLibero.brawl: true` è ora riconosciuto dal motore (prima la voce «Brawl» rischiava di aprire il combattimento libero).
+- Provato costruendo in locale (`python costruisci.py --motore <android-updater>`) in Chromium: menu, brawl, corsa con squarcio. Non provato su un telefono.
+
+## 2 bis. Sintesi delle Modifiche Effettuate (21 Ottobre 2026)
 
 ### 🐉 1. Ridisegno Completo dei Saibaman (Grafica e Stile Anime DBZ)
 - **Problema iniziale**: i Saibaman apparivano come "cactus disegnati male".
@@ -99,7 +109,7 @@ python -m http.server 8000 --directory dist
 ## 4. Regole per i Futuri Aggiornamenti
 
 1. **Modifiche al Motore di Gioco**:
-   - `ring.js`, `lingue.js`, le arene e la fisica si modificano nel repository `android-updater` (ramo `claude/parry-brawl-web` o `main`).
+   - `ring.js`, `lingue.js`, le arene e la fisica si modificano nel repository `android-updater` (su `main`: un push lì pubblica anche il sito del tracker su Oracle).
    - Dopo aver committato e pushato le modifiche su `android-updater`, si copia il nuovo commit hash SHA in `motore.json` di questo repository.
 2. **Modifiche al Sito & HUD**:
    - I layout touch, il foglio account, gli stili CSS e il bridge browser si modificano direttamente in `sorgente/`.
