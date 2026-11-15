@@ -7,6 +7,10 @@
 A survivor brawler built around one mechanic: the **parry**, timed to the beat of the soundtrack.
 Enemy attacks land on the rhythm, so reading the music is how you survive the horde.
 
+![Landing page](docs/home.png)
+
+<img src="docs/menu.png" width="49%" alt="Main menu and character upgrades"> <img src="docs/partita.png" width="49%" alt="A parried zombie in the first run">
+
 ### Highlights
 - 🎵 Rhythm-driven combat: attacks and the animated Parry button follow the music
 - 📱 **One codebase, three platforms**: browser on PC (keyboard), installable **PWA on iPhone**, and an **Android APK** that turns the whole phone into the ring (CI build ready, release pending the signing key)
@@ -17,7 +21,7 @@ Enemy attacks land on the rhythm, so reading the music is how you survive the ho
 
 ### How it's built
 The game engine (`ring.js`) is shared with a Chrome extension and an Android app in
-[android-updater](https://github.com/rikyroky91-commits/android-updater). This repo pins an engine commit in
+[mobile-update-tracker](https://github.com/rikyroky91-commits/mobile-update-tracker). This repo pins an engine commit in
 `motore.json`, and `costruisci.py` assembles the website, PWA and touch layer on top of it.
 
 ```bash
@@ -48,7 +52,7 @@ che usa tutto il telefono come ring.
 ### Come è fatto
 
 Il motore del gioco **non sta qui**: `ring.js`, `lingue.js`, l'avvio e le arene vivono in
-[android-updater](https://github.com/rikyroky91-commits/android-updater), lo stesso motore dell'estensione per
+[mobile-update-tracker](https://github.com/rikyroky91-commits/mobile-update-tracker), lo stesso motore dell'estensione per
 Chrome e dell'app Android. `motore.json` dice quale commit usare; `costruisci.py` lo scarica, ne prepara gli asset
 e ci aggiunge quello che è solo del sito:
 

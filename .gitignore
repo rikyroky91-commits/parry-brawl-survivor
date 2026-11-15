@@ -18,3 +18,4 @@ aggiorna_ring.py
 *.png
 motore_repo/
 
+!docs/*.png
